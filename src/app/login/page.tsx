@@ -1,13 +1,16 @@
 "use client";
 // This login form does NOT auto-login. Login only happens on form submit, even if fields are pre-filled.
-import { useState } from "react";
+// DEV NOTE: Test accounts for development only (do not display in UI):
+// Member:    member@fcescuela.com / test123
+// Regular:   user@fcescuela.com / test123
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { UserIcon, UserGroupIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -164,23 +167,7 @@ export default function LoginPage() {
               </button>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={useMemberAccount}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  <UserGroupIcon className="h-5 w-5 mr-2" />
-                  Use Member Account
-                </button>
-
-                <button
-                  type="button"
-                  onClick={useNonMemberAccount}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  <UserCircleIcon className="h-5 w-5 mr-2" />
-                  Use Regular Account
-                </button>
+                {/* Dev account buttons removed */}
               </div>
             </div>
           </form>
@@ -197,5 +184,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 } 

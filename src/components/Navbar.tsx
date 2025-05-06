@@ -8,12 +8,12 @@ import { useSession, signOut } from 'next-auth/react'
 import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon } from '@heroicons/react/24/outline'
 
 const navigation = [
+  { name: 'About Us', href: '/about' },
   { name: 'Matches', href: '/matches' },
   { name: 'Tickets', href: '/tickets' },
   { name: 'News', href: '/news' },
   { name: 'Team', href: '/team' },
   { name: 'Gallery', href: '/gallery' },
-  { name: 'Membership', href: '/membership' },
 ]
 
 export default function Navbar() {

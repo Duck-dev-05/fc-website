@@ -58,6 +58,7 @@ model User {
   website       String?
   occupation    String?
   favoriteTeam  String?
+  profileInitialized Boolean @default(false)
   accounts      Account[]
   sessions      Session[]
   tickets       Ticket[]

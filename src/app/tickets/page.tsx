@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
@@ -22,7 +22,7 @@ interface Ticket {
   availableSeats: number | null;
 }
 
-export default function TicketsPage() {
+function TicketsContent() {
   const router = useRouter()
   const { data: session, status: authStatus } = useSession()
   const searchParams = useSearchParams()
@@ -333,4 +333,19 @@ export default function TicketsPage() {
       </div>
     </div>
   )
+}
+
+export default function TicketsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600">Loading available matches...</p>
+        </div>
+      </div>
+    }>
+      <TicketsContent />
+    </Suspense>
+  );
 } 

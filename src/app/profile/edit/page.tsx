@@ -1,31 +1,57 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
-const mockProfile = {
-  name: "Test User",
-  username: "testuser",
-  email: "user@fcescuela.com",
-  phone: "+1 555-123-4567",
-  dob: "1998-05-15",
-  address: "123 Main St, City, Country",
-  gender: "Male",
-  nationality: "Spanish",
-  language: "English",
-  bio: "Football enthusiast. Love to play and watch matches!",
-  website: "https://fcescuela.com",
-  occupation: "Student",
-  favoriteTeam: "FC Escuela",
-};
+interface Profile {
+  name: string;
+  email: string;
+  username: string;
+  phone?: string;
+  dob?: string;
+  gender?: string;
+  nationality?: string;
+  language?: string;
+  occupation?: string;
+  favoriteTeam?: string;
+  address?: string;
+  website?: string;
+  bio?: string;
+  [key: string]: string | undefined;
+}
 
 export default function EditProfilePage() {
+  const { data: session } = useSession();
   const router = useRouter();
-  const [profile, setProfile] = useState(mockProfile);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  // Determine if user is social login (Google, Facebook, etc.)
+  const isSocialLogin = Boolean(session?.user?.email && session?.user?.name && session?.user?.image);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/profile");
+        if (!res.ok) throw new Error("Failed to fetch profile");
+        const data = await res.json();
+        setProfile(data.user);
+      } catch (err) {
+        setProfile(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    if (!profile) return;
+    if (isSocialLogin && ["name", "email", "username"].includes(e.target.name)) return;
     setProfile({ ...profile, [e.target.name]: e.target.value });
   }
 
@@ -35,10 +61,17 @@ export default function EditProfilePage() {
     setError("");
     setSuccess(false);
     try {
+      // Always send real social data for locked fields
+      const submitProfile = { ...profile };
+      if (isSocialLogin) {
+        submitProfile.name = session?.user?.name || '';
+        submitProfile.email = session?.user?.email || '';
+        submitProfile.username = session?.user?.email?.split("@")[0] || '';
+      }
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
+        body: JSON.stringify(submitProfile),
       });
       if (!res.ok) {
         throw new Error("Failed to update profile");
@@ -51,6 +84,17 @@ export default function EditProfilePage() {
       setError("Failed to update profile. Please try again.");
     }
   }
+
+  if (loading || !profile) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  // For social login, always use session data for locked fields
+  const lockedFields = isSocialLogin ? {
+    name: session?.user?.name || '',
+    email: session?.user?.email || '',
+    username: session?.user?.email?.split("@")[0] || '',
+  } : {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-12 px-4 flex flex-col items-center">
@@ -77,15 +121,55 @@ export default function EditProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
-              <input name="name" value={profile.name} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+              <div className="relative">
+                <input
+                  name="name"
+                  value={lockedFields.name || profile.name}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  readOnly={isSocialLogin}
+                />
+                {isSocialLogin && (
+                  <span className="absolute right-2 top-2 text-blue-400" title="This field is managed by your social account.">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.104.896-2 2-2s2 .896 2 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2c0-1.104.896-2 2-2z" /></svg>
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Username</label>
-              <input name="username" value={profile.username} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+              <div className="relative">
+                <input
+                  name="username"
+                  value={lockedFields.username || profile.username}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  readOnly={isSocialLogin}
+                />
+                {isSocialLogin && (
+                  <span className="absolute right-2 top-2 text-blue-400" title="This field is managed by your social account.">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.104.896-2 2-2s2 .896 2 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2c0-1.104.896-2 2-2z" /></svg>
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input name="email" value={profile.email} onChange={handleChange} type="email" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+              <div className="relative">
+                <input
+                  name="email"
+                  value={lockedFields.email || profile.email}
+                  onChange={handleChange}
+                  type="email"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  readOnly={isSocialLogin}
+                />
+                {isSocialLogin && (
+                  <span className="absolute right-2 top-2 text-blue-400" title="This field is managed by your social account.">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.104.896-2 2-2s2 .896 2 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2c0-1.104.896-2 2-2z" /></svg>
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Phone</label>
