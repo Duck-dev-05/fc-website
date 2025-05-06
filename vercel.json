@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NEXTAUTH_URL": "https://fcwebsite-fe.vercel.app",
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key",
+    "DATABASE_URL": "@database_url"
+  }
+} 
