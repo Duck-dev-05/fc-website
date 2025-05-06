@@ -55,7 +55,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/20" />
         </div>
         <div className="container-custom h-full flex flex-col justify-center items-center text-white text-center relative z-10 px-4">
-          <h1 className="text-5xl font-bold mb-6 drop-shadow-lg">Welcome to Our Football Club</h1>
+          <h1 className="text-5xl font-bold mb-6 drop-shadow-lg">Welcome to FC ESCUELA</h1>
           <p className="text-xl mb-8 max-w-2xl drop-shadow">
             Join us in celebrating the beautiful game. Experience the passion, the excitement, and the community of football.
           </p>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LockClosedIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 interface MembershipPlan {
   id: string;
@@ -26,6 +27,12 @@ export default function MembershipPage() {
   const canceled = searchParams.get("canceled");
 
   useEffect(() => {
+    if (authStatus === "unauthenticated") {
+      router.replace(`/login?callbackUrl=${encodeURIComponent('/membership')}`);
+    }
+  }, [authStatus, router]);
+
+  useEffect(() => {
     if (authStatus !== "authenticated") return;
     const fetchPlans = async () => {
       try {
@@ -35,6 +42,7 @@ export default function MembershipPage() {
         setPlans(data);
       } catch (err) {
         setError("Could not load membership plans.");
+        toast.error("Could not load membership plans.");
       } finally {
         setLoading(false);
       }
@@ -52,7 +60,7 @@ export default function MembershipPage() {
         const data = await res.json();
         setProfile(data.user);
       } catch (err) {
-        // ignore
+        toast.error('Failed to fetch profile');
       } finally {
         setProfileLoading(false);
       }
@@ -60,7 +68,6 @@ export default function MembershipPage() {
     fetchProfile();
   }, [authStatus]);
 
-  // Require login
   if (authStatus === "loading" || loading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -69,22 +76,8 @@ export default function MembershipPage() {
     );
   }
 
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <LockClosedIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h2 className="mt-4 text-xl font-bold text-gray-900">Login Required</h2>
-          <p className="mt-2 text-gray-600">Please sign in to view and purchase memberships.</p>
-          <button
-            onClick={() => router.push('/login')}
-            className="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    );
+  if (authStatus === "unauthenticated") {
+    return null;
   }
 
   const handlePurchase = async (planId: string, price: number) => {
@@ -98,12 +91,13 @@ export default function MembershipPage() {
       });
       const data = await res.json();
       if (data.url) {
+        toast.success("Redirecting to payment...");
         window.location.href = data.url;
       } else {
-        alert(data.error || "Failed to start checkout.");
+        toast.error(data.error || "Failed to start checkout.");
       }
     } catch (e) {
-      alert("Failed to start checkout.");
+      toast.error("Failed to start checkout.");
     } finally {
       setProcessing(null);
     }

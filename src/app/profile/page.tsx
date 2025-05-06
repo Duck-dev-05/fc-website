@@ -112,6 +112,12 @@ export default function ProfilePage() {
     profile?.website ? { type: 'Website', url: profile.website } : null,
   ].filter(Boolean);
 
+  // Use session info for social login if available
+  const displayName = session?.user?.name || profile?.name || 'User';
+  const displayEmail = session?.user?.email || profile?.email || '';
+  const displayImage = session?.user?.image || profile?.image || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+  const displayId = profile?.id || '';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-12 px-4 flex flex-col items-center">
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-lg w-full flex flex-col items-center border border-blue-100">
@@ -139,19 +145,19 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center w-full">
                 {/* Profile Picture and Name */}
                 <div className="flex flex-col items-center mb-6">
-                  {profile?.image ? (
-                    <img src={profile.image} alt="Profile" className="h-24 w-24 rounded-full object-cover mb-3 border-4 border-blue-200 shadow" />
+                  {displayImage ? (
+                    <img src={displayImage} alt="Profile" className="h-24 w-24 rounded-full object-cover mb-3 border-4 border-blue-200 shadow" />
                   ) : (
                     <UserCircleIcon className="h-24 w-24 text-blue-300 mb-3" />
                   )}
-                  <h1 className="text-4xl font-extrabold text-blue-700 mb-1">{profile?.name || 'User'}</h1>
+                  <h1 className="text-4xl font-extrabold text-blue-700 mb-1">{displayName}</h1>
                   <div className="flex items-center gap-2 text-gray-500 text-base mb-1">
                     <EnvelopeIcon className="h-5 w-5" />
-                    {profile?.email || <span className="italic text-gray-400">Not set</span>}
+                    {displayEmail || <span className="italic text-gray-400">Not set</span>}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <IdentificationIcon className="h-4 w-4" />
-                    User ID: <span className="font-mono text-gray-600">{profile?.id || <span className="italic text-gray-400">Not set</span>}</span>
+                    User ID: <span className="font-mono text-gray-600">{displayId || <span className="italic text-gray-400">Not set</span>}</span>
                   </div>
                 </div>
                 {/* Divider */}

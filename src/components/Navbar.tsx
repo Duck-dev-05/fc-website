@@ -113,7 +113,15 @@ export default function Navbar() {
                       aria-haspopup="true"
                       aria-expanded={showAccountMenu}
                     >
-                      <UserCircleIcon className="h-7 w-7" />
+                      {session.user?.image ? (
+                        <img
+                          src={session.user.image}
+                          alt={session.user.name || 'User'}
+                          className="h-10 w-10 rounded-full object-cover border-2 border-white shadow"
+                        />
+                      ) : (
+                        <UserCircleIcon className="h-7 w-7" />
+                      )}
                     </button>
                     {showAccountMenu && (
                       <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-50 border border-blue-100 animate-fade-in" role="menu" aria-label="Account submenu">

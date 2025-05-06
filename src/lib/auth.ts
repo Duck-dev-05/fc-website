@@ -3,6 +3,8 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { PrismaClient } from '@prisma/client'
 import { compare } from 'bcrypt'
+import GoogleProvider from 'next-auth/providers/google'
+import FacebookProvider from 'next-auth/providers/facebook'
 
 declare module 'next-auth' {
   interface Session {
@@ -46,6 +48,10 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        if (!user.password) {
+          return null;
+        }
+
         const isPasswordValid = await compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
@@ -58,27 +64,61 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
         }
       }
-    })
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture // Google provides high quality profile picture
+        }
+      } 
+    }),
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          image: `https://graph.facebook.com/${profile.id}/picture?type=large` // Facebook high res profile picture
+        }
+      }
+    }),
   ],
   callbacks: {
-    session: ({ session, token }) => {
+    async session({ session, token }) {
       return {
         ...session,
         user: {
           ...session.user,
           id: token.id as string,
+          email: token.email as string | null | undefined,
+          name: token.name as string | null | undefined,
+          image: typeof token.picture === 'string' ? token.picture : (typeof token.image === 'string' ? token.image : null),
         },
-      }
+      };
     },
-    jwt: ({ token, user }) => {
+    async jwt({ token, user, account, profile }) {
       if (user) {
-        const u = user as unknown as any
-        return {
-          ...token,
-          id: u.id,
+        const u = user as any;
+        token.id = u.id;
+        token.email = u.email;
+        token.name = u.name;
+        // Use high quality images from social providers
+        if (account?.provider === 'google') {
+          token.picture = profile?.picture;
+        } else if (account?.provider === 'facebook') {
+          token.picture = `https://graph.facebook.com/${profile?.id}/picture?type=large`;
+        } else {
+          token.picture = u.image || null;
         }
       }
-      return token
+      return token;
     },
   },
   pages: {
@@ -90,11 +130,25 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
   // Prevent auto-login
   events: {
-    async signIn({ user }) {
-      // You can add custom logic here when a user signs in
+    async signIn({ user, account, profile }) {
+      // Only update for social logins
+      if (account?.provider === 'google' || account?.provider === 'facebook') {
+        const imageUrl = account.provider === 'google' 
+          ? profile?.picture
+          : `https://graph.facebook.com/${profile?.id}/picture?type=large`;
+          
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            name: profile?.name || user.name,
+            email: profile?.email || user.email,
+            image: imageUrl || user.image,
+          },
+        });
+      }
     },
     async signOut({ session, token }) {
       // You can add custom logic here when a user signs out
     },
   },
-} 
+}
