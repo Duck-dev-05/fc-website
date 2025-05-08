@@ -22,7 +22,7 @@ export default function TeamPage() {
         const response = await fetch('/api/team')
         if (!response.ok) throw new Error('Failed to fetch team members')
         const data = await response.json()
-        setMembers(data)
+        setMembers(Array.isArray(data) ? data : data.team)
       } catch (err) {
         setError('Failed to load team members')
         console.error('Error fetching team:', err)
@@ -55,6 +55,20 @@ export default function TeamPage() {
     )
   }
 
+  // Sort: captain first, then by role order, then the rest A-Z
+  const roleOrder = ['GK', 'CB', 'LB', 'RB', 'CDM', 'AMF', 'LW', 'RW', 'CF'];
+  const sortedMembers = [...members].sort((a, b) => {
+    if (a.captain && !b.captain) return -1;
+    if (!a.captain && b.captain) return 1;
+    if (a.captain && b.captain) return 0;
+    const aRoleIdx = roleOrder.indexOf(a.role.toUpperCase());
+    const bRoleIdx = roleOrder.indexOf(b.role.toUpperCase());
+    if (aRoleIdx !== -1 && bRoleIdx !== -1) return aRoleIdx - bRoleIdx;
+    if (aRoleIdx !== -1) return -1;
+    if (bRoleIdx !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <div className="min-h-[80vh] w-full flex flex-col items-center justify-center py-12 px-2 bg-gradient-to-br from-blue-100 via-white to-blue-200 animate-gradient-x">
       <div className="mb-10 text-center">
@@ -62,7 +76,7 @@ export default function TeamPage() {
         <p className="mt-3 text-gray-700 text-xl font-medium">Player list for FC ESCUELA</p>
       </div>
       <ul className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {members.map((member, idx) => (
+        {sortedMembers.map((member, idx) => (
           <li
             key={member.id}
             className="flex flex-col items-center bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-blue-100 transition-transform hover:scale-[1.03] hover:shadow-2xl group animate-fade-in relative"
@@ -75,7 +89,7 @@ export default function TeamPage() {
             )}
             <div className="flex-shrink-0">
               <img
-                src={member.image || '/default-player.png'}
+                src={member.image ? `/avatars/${member.image}` : '/default-player.png'}
                 alt={member.name}
                 className="w-24 h-24 rounded-full object-cover border-4 border-blue-300 shadow-lg bg-white group-hover:scale-105 transition-transform duration-200"
                 onError={e => {

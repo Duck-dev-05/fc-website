@@ -1,3 +1,11 @@
+// Add this at the very top of the file
+declare global {
+  interface Window {
+    googleTranslateElementInit?: () => void;
+    google?: any;
+  }
+}
+
 import Image from "next/image";
 
 export default function Footer() {
@@ -33,17 +41,3 @@ export default function Footer() {
   )
 }
 
-// Google Translate script loader
-if (typeof window !== 'undefined' && !window.googleTranslateElementInit) {
-  window.googleTranslateElementInit = function() {
-    new window.google.translate.TranslateElement({
-      pageLanguage: 'en',
-      includedLanguages: 'en,vi',
-      layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-      autoDisplay: false
-    }, 'google_translate_element');
-  };
-  const script = document.createElement('script');
-  script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-  document.body.appendChild(script);
-} 

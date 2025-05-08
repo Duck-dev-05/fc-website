@@ -1,22 +1,29 @@
 "use client";
-import { useState, useEffect } from "react";
-import { getProviders, signIn } from "next-auth/react";
-import SignInButton from "./SignInButton";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook } from "react-icons/fa";
+import { useState } from "react";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-export default function SignIn() {
-  const [providers, setProviders] = useState<any>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+export default function SignInPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get('error');
+  const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    getProviders().then(setProviders);
-  }, []);
+  let errorMessage = error;
+  if (errorParam === 'OAuthAccountNotLinked') {
+    errorMessage = 'An account already exists with this email, but it was registered using a different sign-in method. Please use the original method to log in.';
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,142 +31,92 @@ export default function SignIn() {
     setError("");
     const res = await signIn("credentials", {
       redirect: false,
-      email,
-      password,
+      email: form.email,
+      password: form.password,
     });
     setLoading(false);
     if (res?.ok) {
-      window.location.href = "/";
+      router.push("/");
     } else {
       setError(res?.error || "Invalid credentials");
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <Link href="/" className="inline-block">
-            <Image
-              src="/Logo.jpg"
-              alt="Club Logo"
-              width={80}
-              height={80}
-              className="mx-auto"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-2xl border border-blue-100 flex flex-col items-center">
+        <Image src="/images/logo.jpg" alt="FC ESCUELA" width={64} height={64} className="rounded-lg mb-4" />
+        <h2 className="text-2xl font-bold mb-2 text-center text-gray-900">Sign In</h2>
+        <p className="text-gray-500 text-sm mb-6 text-center">Sign in to your account to continue</p>
+        <form onSubmit={handleSubmit} className="w-full space-y-4 mb-2">
+          <div>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 border-gray-300 transition placeholder-gray-400"
+              placeholder="Email"
+              autoComplete="email"
             />
-          </Link>
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-            Welcome back
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign up
-            </Link>
-          </p>
-        </div>
-
-        <div className="mt-8 space-y-6">
-          <div className="space-y-4">
-            {providers &&
-              Object.values(providers).map((provider) => (
-                <SignInButton key={(provider as any).id} provider={provider as import("next-auth/react").ClientSafeProvider} />
-              ))}
           </div>
-
           <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-gray-50 px-2 text-gray-500">Or continue with</span>
-            </div>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 border-gray-300 transition placeholder-gray-400 pr-10"
+              placeholder="Password"
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600"
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              {showPassword ? <AiOutlineEyeInvisible className="h-5 w-5" /> : <AiOutlineEye className="h-5 w-5" />}
+            </button>
           </div>
-
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-4 rounded-md shadow-sm">
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="relative block w-full rounded-md border-0 py-2 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    className="relative block w-full rounded-md border-0 py-2 px-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    placeholder="Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowPassword((v) => !v)}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                  Forgot your password?
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                disabled={loading}
-              >
-                {loading ? "Signing in..." : "Sign in"}
-              </button>
-            </div>
-          </form>
+          {errorMessage && <div className="text-red-600 text-sm text-center">{errorMessage}</div>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-60"
+          >
+            {loading ? (
+              <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : null}
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+        <div className="flex items-center w-full my-4">
+          <div className="flex-grow border-t border-gray-200" />
+          <span className="mx-2 text-gray-400 text-xs">or</span>
+          <div className="flex-grow border-t border-gray-200" />
+        </div>
+        <button
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-100 transition mb-4 shadow-sm"
+          onClick={() => signIn("google", { prompt: "select_account", callbackUrl: "/" })}
+        >
+          <FcGoogle className="h-5 w-5" />
+          Sign in with Google
+        </button>
+        <button
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition mb-4 shadow-sm"
+          onClick={() => signIn("facebook", { callbackUrl: "/" })}
+        >
+          <FaFacebook className="h-5 w-5" />
+          Sign in with Facebook
+        </button>
+        <div className="mt-2 text-center text-sm text-gray-600">
+          Don&apos;t have an account? <a href="/auth/register" className="text-blue-600 hover:underline font-medium">Register</a>
         </div>
       </div>
     </div>

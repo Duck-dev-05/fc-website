@@ -17,7 +17,10 @@ export default function MatchesPage() {
     if (status === 'authenticated') {
       fetch('/api/matches')
         .then(res => res.json())
-        .then(data => setMatches(data))
+        .then(data => {
+          setMatches(data);
+          console.log('Fetched matches:', data); // Debug log
+        })
         .finally(() => setLoading(false))
     }
   }, [status])
@@ -43,8 +46,28 @@ export default function MatchesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Upcoming Matches</h1>
-      <MatchList matches={matches} />
+      <h1 className="text-3xl font-bold mb-8">Matches</h1>
+      {/* Upcoming Matches */}
+      {matches.filter(m => m.status === 'Scheduled').length > 0 && (
+        <>
+          <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
+          <MatchList matches={matches.filter(m => m.status === 'Scheduled')} />
+        </>
+      )}
+      {/* Finished Matches */}
+      {matches.filter(m => m.status === 'Finished').length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-semibold mb-4">Finished Matches</h2>
+          <MatchList matches={matches.filter(m => m.status === 'Finished')} />
+        </div>
+      )}
+      {/* Show all if no matches are found by status */}
+      {matches.length > 0 && matches.filter(m => m.status === 'Scheduled').length === 0 && matches.filter(m => m.status === 'Finished').length === 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-semibold mb-4">All Matches (No Status)</h2>
+          <MatchList matches={matches} />
+        </div>
+      )}
     </div>
   )
 } 

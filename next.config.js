@@ -12,6 +12,11 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Ensure images are optimized
+  images: {
+    domains: ['localhost'],
+    unoptimized: false,
+  },
 }
 
 module.exports = nextConfig 

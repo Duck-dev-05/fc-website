@@ -29,6 +29,7 @@ export default function RegisterPage() {
       const data = await res.json();
       if (res.ok) {
         setSuccess("Registration successful! You can now sign in.");
+        setTimeout(() => router.push("/login"), 1500);
       } else {
         setError(data.error || "Registration failed");
       }

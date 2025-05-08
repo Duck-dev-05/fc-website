@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
@@ -18,14 +16,11 @@ export async function POST(request: Request) {
     }
 
     // Generate username if not provided
-    let finalUsername = username;
-    if (!finalUsername) {
-      finalUsername = email.split('@')[0];
-      let counter = 1;
-      while (await prisma.user.findFirst({ where: { username: finalUsername } })) {
-        finalUsername = `${email.split('@')[0]}${counter}`;
-        counter++;
-      }
+    let finalUsername = username || email.split('@')[0];
+    let counter = 1;
+    while (await prisma.user.findFirst({ where: { username: finalUsername } })) {
+      finalUsername = `${email.split('@')[0]}${counter}`;
+      counter++;
     }
 
     // Hash password
@@ -46,8 +41,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Registration successful' }, { status: 201 });
   } catch (error: any) {
     console.error('Registration error:', error);
-    // Provide more detailed error in development
     const isDev = process.env.NODE_ENV !== 'production';
     return NextResponse.json({ error: isDev && error.message ? error.message : 'Internal server error' }, { status: 500 });
   }
-} 
+}
+
+export const dynamic = "force-dynamic";
+

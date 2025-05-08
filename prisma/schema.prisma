@@ -125,12 +125,13 @@ model News {
 }
 
 model TeamMember {
-  id      String   @id @default(cuid())
+  id      Int      @id @default(autoincrement())
   name    String
   role    String
   image   String
   bio     String
   order   Int      // For sorting
+  captain Boolean  @default(false)
 }
 
 model Membership {

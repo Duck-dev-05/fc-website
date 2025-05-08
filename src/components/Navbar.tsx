@@ -3,10 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon } from '@heroicons/react/24/outline'
-import { GlobeAltIcon } from '@heroicons/react/24/solid'
 
 const navigation = [
   { name: 'About Us', href: '/about' },
@@ -17,9 +16,13 @@ const navigation = [
   { name: 'Gallery', href: '/gallery' },
 ]
 
-const languages: Record<string, { name: string; flag: string }> = {
-  en: { name: 'English', flag: '🇬🇧' },
-  vi: { name: 'Tiếng Việt', flag: '🇻🇳' }
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
 }
 
 export default function Navbar() {
@@ -27,16 +30,35 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<any>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const pathname = usePathname()
   const menuRef = useRef<HTMLDivElement>(null);
   const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false)
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const [lang, setLang] = useState('en');
+  const router = useRouter();
+
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    if (debouncedSearch.trim()) {
+      fetch(`/api/search?query=${encodeURIComponent(debouncedSearch)}`)
+        .then(res => res.json())
+        .then(data => {
+          setSearchResults(data);
+          setShowDropdown(true);
+        });
+    } else {
+      setSearchResults(null);
+      setShowDropdown(false);
+    }
+  }, [debouncedSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
-      console.log("Search query:", search);
+      router.push(`/search?query=${encodeURIComponent(search)}`);
+      setSearch(""); // Optionally clear the search bar
+      setShowDropdown(false);
     }
   };
 
@@ -51,28 +73,15 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAccountMenu]);
 
-  // Google Translate language switch
-  const handleLanguageSwitch = (language: string) => {
-    setLang(language);
-    let tries = 0;
-    const maxTries = 30; // Try for up to 3 seconds
-    const trySetLanguage = () => {
-      const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (select) {
-        if (select.value !== language) {
-          select.value = language;
-          select.dispatchEvent(new Event('change'));
-        }
-      } else if (tries < maxTries) {
-        tries++;
-        setTimeout(trySetLanguage, 100);
-      } else {
-        console.warn('Google Translate widget not loaded.');
-      }
-    };
-    setTimeout(trySetLanguage, 500);
-    setShowLanguageMenu(false);
-  };
+  // Recommended links for empty search
+  const recommendedLinks = [
+    { name: 'About Us', href: '/about' },
+    { name: 'Matches', href: '/matches' },
+    { name: 'Tickets', href: '/tickets' },
+    { name: 'News', href: '/news' },
+    { name: 'Team', href: '/team' },
+    { name: 'Gallery', href: '/gallery' },
+  ];
 
   return (
     <nav className="bg-gradient-to-b from-white to-blue-50/60 shadow-md sticky top-0 z-50">
@@ -106,6 +115,7 @@ export default function Navbar() {
               className="relative flex items-center ml-6 w-80 max-w-xs bg-white rounded-full shadow border border-blue-100 focus-within:ring-2 focus-within:ring-blue-400 transition-all"
               role="search"
               aria-label="Site search"
+              autoComplete="off"
             >
               <span className="absolute left-3 text-blue-400 pointer-events-none">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -117,16 +127,89 @@ export default function Navbar() {
                 className="flex-1 bg-transparent outline-none pl-10 pr-8 py-2 text-gray-700 text-base rounded-full focus:ring-0"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onFocus={() => { if (searchResults) setShowDropdown(true); }}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
               />
               {search && (
                 <button
                   type="button"
                   aria-label="Clear search"
                   className="absolute right-3 text-gray-400 hover:text-red-500 focus:outline-none"
-                  onClick={() => setSearch("")}
+                  onClick={() => { setSearch(""); setShowDropdown(false); }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
+              )}
+              {/* Instant search dropdown */}
+              {showDropdown && (
+                <div className="absolute left-0 top-12 w-full bg-white border border-blue-100 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                  <ul className="p-2">
+                    {/* Show recommended links if search is empty */}
+                    {!search && (
+                      <li className="mb-2">
+                        <div className="text-xs font-bold text-gray-700 mb-1">Recommended</div>
+                        {recommendedLinks.map((item) => (
+                          <Link key={item.href} href={item.href} className="block px-3 py-2 hover:bg-blue-50 rounded text-blue-700 font-semibold" onClick={() => setShowDropdown(false)}>
+                            {item.name}
+                          </Link>
+                        ))}
+                      </li>
+                    )}
+                    {/* Only show search results if search is not empty */}
+                    {search && searchResults && (
+                      <>
+                        {/* Pages */}
+                        {searchResults.pages && searchResults.pages.length > 0 && (
+                          <li className="mb-2">
+                            <div className="text-xs font-bold text-blue-700 mb-1">Pages</div>
+                            {searchResults.pages.map((item: any) => (
+                              <Link key={item.href} href={item.href} className="block px-3 py-2 hover:bg-blue-50 rounded text-blue-700 font-semibold" onClick={() => setShowDropdown(false)}>
+                                {item.name}
+                              </Link>
+                            ))}
+                          </li>
+                        )}
+                        {/* News */}
+                        {searchResults.news && searchResults.news.length > 0 && (
+                          <li className="mb-2">
+                            <div className="text-xs font-bold text-green-700 mb-1">News</div>
+                            {searchResults.news.map((item: any) => (
+                              <Link key={item.id} href={`/news/${item.id}`} className="block px-3 py-2 hover:bg-green-50 rounded text-green-700 font-semibold" onClick={() => setShowDropdown(false)}>
+                                {item.title}
+                              </Link>
+                            ))}
+                          </li>
+                        )}
+                        {/* Team Members */}
+                        {searchResults.team && searchResults.team.length > 0 && (
+                          <li className="mb-2">
+                            <div className="text-xs font-bold text-purple-700 mb-1">Team Members</div>
+                            {searchResults.team.map((item: any) => (
+                              <Link key={item.id} href={`/team#${item.name.toLowerCase().replace(/ /g, '-')}`} className="block px-3 py-2 hover:bg-purple-50 rounded text-purple-700 font-semibold" onClick={() => setShowDropdown(false)}>
+                                {item.name}
+                              </Link>
+                            ))}
+                          </li>
+                        )}
+                        {/* Matches */}
+                        {searchResults.matches && searchResults.matches.length > 0 && (
+                          <li className="mb-2">
+                            <div className="text-xs font-bold text-orange-700 mb-1">Matches</div>
+                            {searchResults.matches.map((item: any) => (
+                              <Link key={item.id} href={`/matches/${item.id}`} className="block px-3 py-2 hover:bg-orange-50 rounded text-orange-700 font-semibold" onClick={() => setShowDropdown(false)}>
+                                {item.homeTeam} vs {item.awayTeam}
+                              </Link>
+                            ))}
+                          </li>
+                        )}
+                        {/* No results */}
+                        {(!searchResults.pages?.length && !searchResults.news?.length && !searchResults.team?.length && !searchResults.matches?.length) && (
+                          <li className="text-gray-500 px-3 py-2">No results found.</li>
+                        )}
+                      </>
+                    )}
+                  </ul>
+                </div>
               )}
             </form>
             {/* Auth section */}
@@ -218,45 +301,6 @@ export default function Navbar() {
                   >
                     Login
                   </Link>
-                )}
-              </div>
-            </div>
-            {/* Language Switch Button */}
-            <div className="ml-4 flex items-center gap-2">
-              <div className="relative group">
-                <button
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-blue-50 transition-colors duration-200"
-                  onClick={() => setShowLanguageMenu((v) => !v)}
-                >
-                  <GlobeAltIcon className="h-5 w-5 text-blue-600" />
-                  <span className="hidden sm:inline">{languages[lang].name}</span>
-                  <span className="sm:hidden">{languages[lang].flag}</span>
-                  <svg className={`h-4 w-4 transition-transform duration-200 ${showLanguageMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {showLanguageMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-blue-100 animate-fade-in">
-                    {Object.entries(languages).map(([code, { name, flag }]) => (
-                      <button
-                        key={code}
-                        onClick={() => handleLanguageSwitch(code)}
-                        className={`w-full flex items-center gap-3 px-4 py-2 text-sm ${
-                          lang === code
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                        } transition-colors duration-200`}
-                      >
-                        <span className="text-lg">{flag}</span>
-                        <span>{name}</span>
-                        {lang === code && (
-                          <svg className="h-4 w-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
                 )}
               </div>
             </div>
@@ -381,30 +425,6 @@ export default function Navbar() {
                     Login
                   </Link>
                 )}
-              </div>
-              {/* Mobile Language Switch */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex flex-col gap-2">
-                  {Object.entries(languages).map(([code, { name, flag }]) => (
-                    <button
-                      key={code}
-                      onClick={() => handleLanguageSwitch(code)}
-                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium ${
-                        lang === code
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                      } transition-colors duration-200`}
-                    >
-                      <span className="text-lg">{flag}</span>
-                      <span>{name}</span>
-                      {lang === code && (
-                        <svg className="h-4 w-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
