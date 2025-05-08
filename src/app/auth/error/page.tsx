@@ -1,6 +1,7 @@
 "use client";
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+
 import Image from "next/image";
 
 function AuthErrorPageInner() {
@@ -59,6 +60,18 @@ function AuthErrorPageInner() {
             Go to Homepage
           </button>
         </div>
+
+        <h1 className="text-2xl font-bold mb-4 text-red-600">Authentication Error</h1>
+        <p className="mb-2 text-gray-700">{message}</p>
+        {error && (
+          <div className="mt-2 text-xs text-gray-400">Error code: <span className="font-mono">{error}</span></div>
+        )}
+        <button
+          className="mt-6 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          onClick={() => router.push("/login")}
+        >
+          Back to Login
+        </button>
       </div>
     </div>
   );

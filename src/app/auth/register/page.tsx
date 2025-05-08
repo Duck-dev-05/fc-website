@@ -30,6 +30,8 @@ export default function RegisterPage() {
       if (res.ok) {
         setSuccess("Registration successful! You can now sign in.");
       } else {
+        setTimeout(() => router.push("/login"), 1500);
+      } else {
         setError(data.error || "Registration failed");
       }
     } catch (err) {
