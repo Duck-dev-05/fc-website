@@ -2,8 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  serverOptions: {
-    hostname: 'localhost',
+  env: {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+  },
+  experimental: {
+    serverActions: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
   },
 }
 

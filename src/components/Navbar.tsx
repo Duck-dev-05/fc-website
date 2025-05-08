@@ -25,6 +25,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const menuRef = useRef<HTMLDivElement>(null);
+  const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +123,7 @@ export default function Navbar() {
                       ) : (
                         <UserCircleIcon className="h-7 w-7" />
                       )}
+                      <svg className={`h-5 w-5 ml-2 text-white transition-transform ${showAccountMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                     </button>
                     {showAccountMenu && (
                       <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-50 border border-blue-100 animate-fade-in" role="menu" aria-label="Account submenu">
@@ -129,7 +131,7 @@ export default function Navbar() {
                           <div className="font-semibold text-blue-700 truncate">{session.user?.name || 'User'}</div>
                           <div className="text-xs text-gray-500 truncate">{session.user?.email}</div>
                         </div>
-                        <a
+                        <Link
                           href="/profile"
                           className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
                           role="menuitem"
@@ -138,8 +140,8 @@ export default function Navbar() {
                         >
                           <UserCircleIcon className="h-5 w-5" />
                           Profile
-                        </a>
-                        <a
+                        </Link>
+                        <Link
                           href="/orders"
                           className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
                           role="menuitem"
@@ -148,8 +150,8 @@ export default function Navbar() {
                         >
                           <ShoppingBagIcon className="h-5 w-5" />
                           My Orders
-                        </a>
-                        <a
+                        </Link>
+                        <Link
                           href="/settings"
                           className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
                           role="menuitem"
@@ -158,8 +160,8 @@ export default function Navbar() {
                         >
                           <Cog6ToothIcon className="h-5 w-5" />
                           Settings
-                        </a>
-                        <a
+                        </Link>
+                        <Link
                           href="/support"
                           className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
                           role="menuitem"
@@ -168,7 +170,7 @@ export default function Navbar() {
                         >
                           <LifebuoyIcon className="h-5 w-5" />
                           Support
-                        </a>
+                        </Link>
                         <div className="my-2 border-t border-blue-100" />
                         <button
                           onClick={() => { setShowAccountMenu(false); signOut(); }}
@@ -183,7 +185,7 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link
-                    href="/login"
+                    href="/auth/signin"
                     className="inline-flex items-center px-8 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                   >
                     Login
@@ -229,6 +231,90 @@ export default function Navbar() {
                   {item.name}
                 </Link>
               ))}
+              {/* Add mobile auth section */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                {session ? (
+                  <>
+                    <button
+                      className="w-full flex items-center px-3 py-2 focus:outline-none"
+                      onClick={() => setShowMobileProfileMenu((v) => !v)}
+                      aria-expanded={showMobileProfileMenu}
+                      aria-controls="mobile-profile-menu"
+                    >
+                      {session.user?.image ? (
+                        <img
+                          src={session.user.image}
+                          alt={session.user.name || 'User'}
+                          className="h-8 w-8 rounded-full object-cover border-2 border-white shadow"
+                        />
+                      ) : (
+                        <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                      )}
+                      <div className="ml-3 text-left flex-1">
+                        <div className="text-sm font-medium text-gray-700">{session.user?.name || 'User'}</div>
+                        <div className="text-xs text-gray-500">{session.user?.email}</div>
+                      </div>
+                      <svg className={`h-5 w-5 ml-2 transition-transform ${showMobileProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    {showMobileProfileMenu && (
+                      <div id="mobile-profile-menu" className="mt-2 space-y-1 bg-white rounded-md shadow border border-blue-50">
+                        <Link
+                          href="/profile"
+                          className="block px-3 py-2 text-gray-700 hover:text-blue-600"
+                        >
+                          <div className="flex items-center">
+                            <UserCircleIcon className="h-5 w-5 mr-2" />
+                            Profile
+                          </div>
+                        </Link>
+                        <Link
+                          href="/orders"
+                          className="block px-3 py-2 text-gray-700 hover:text-blue-600"
+                        >
+                          <div className="flex items-center">
+                            <ShoppingBagIcon className="h-5 w-5 mr-2" />
+                            My Orders
+                          </div>
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="block px-3 py-2 text-gray-700 hover:text-blue-600"
+                        >
+                          <div className="flex items-center">
+                            <Cog6ToothIcon className="h-5 w-5 mr-2" />
+                            Settings
+                          </div>
+                        </Link>
+                        <Link
+                          href="/support"
+                          className="block px-3 py-2 text-gray-700 hover:text-blue-600"
+                        >
+                          <div className="flex items-center">
+                            <LifebuoyIcon className="h-5 w-5 mr-2" />
+                            Support
+                          </div>
+                        </Link>
+                        <button
+                          onClick={() => { setIsMenuOpen(false); signOut(); }}
+                          className="w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600"
+                        >
+                          <div className="flex items-center">
+                            <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                            Sign Out
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href="/auth/signin"
+                    className="block w-full px-3 py-2 text-center rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Login
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         )}

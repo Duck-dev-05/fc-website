@@ -6,8 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
 }
 
 model Account {
@@ -59,6 +64,7 @@ model User {
   occupation    String?
   favoriteTeam  String?
   profileInitialized Boolean @default(false)
+  role           UserRole? @default(user)
   accounts      Account[]
   sessions      Session[]
   tickets       Ticket[]
