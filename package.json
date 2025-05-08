@@ -10,7 +10,8 @@
     "db:seed": "prisma db seed",
     "seed": "tsx prisma/seed.ts",
     "prisma:seed": "tsx prisma/seed.ts",
-    "generate-nextauth-secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+    "generate-nextauth-secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
+    "migrate:deploy": "prisma migrate deploy"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
