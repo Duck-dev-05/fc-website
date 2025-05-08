@@ -1,3 +1,11 @@
+// Add this at the very top of the file
+declare global {
+  interface Window {
+    googleTranslateElementInit?: () => void;
+    google?: any;
+  }
+}
+
 import Image from "next/image";
 
 export default function Footer() {

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon } from '@heroicons/react/24/outline'
 import { GlobeAltIcon } from '@heroicons/react/24/solid'
@@ -32,6 +32,7 @@ export default function Navbar() {
   const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [lang, setLang] = useState('en');
+  const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,12 +213,12 @@ export default function Navbar() {
                     )}
                   </div>
                 ) : (
-                  <Link
-                    href="/auth/signin"
+                  <button
+                    onClick={() => router.push('/auth/signin')}
                     className="inline-flex items-center px-8 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                   >
                     Login
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
