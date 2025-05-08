@@ -8,12 +8,12 @@ import { useSession, signOut } from 'next-auth/react'
 import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon } from '@heroicons/react/24/outline'
 
 const navigation = [
+  { name: 'About Us', href: '/about' },
   { name: 'Matches', href: '/matches' },
   { name: 'Tickets', href: '/tickets' },
   { name: 'News', href: '/news' },
   { name: 'Team', href: '/team' },
   { name: 'Gallery', href: '/gallery' },
-  { name: 'Membership', href: '/membership' },
 ]
 
 export default function Navbar() {
@@ -113,7 +113,15 @@ export default function Navbar() {
                       aria-haspopup="true"
                       aria-expanded={showAccountMenu}
                     >
-                      <UserCircleIcon className="h-7 w-7" />
+                      {session.user?.image ? (
+                        <img
+                          src={session.user.image}
+                          alt={session.user.name || 'User'}
+                          className="h-10 w-10 rounded-full object-cover border-2 border-white shadow"
+                        />
+                      ) : (
+                        <UserCircleIcon className="h-7 w-7" />
+                      )}
                     </button>
                     {showAccountMenu && (
                       <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-50 border border-blue-100 animate-fade-in" role="menu" aria-label="Account submenu">

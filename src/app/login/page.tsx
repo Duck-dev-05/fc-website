@@ -1,14 +1,19 @@
 "use client";
 // This login form does NOT auto-login. Login only happens on form submit, even if fields are pre-filled.
-import { useState } from "react";
+// DEV NOTE: Test accounts for development only (do not display in UI):
+// Member:    member@fcescuela.com / test123
+// Regular:   user@fcescuela.com / test123
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { UserIcon, UserGroupIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -24,13 +29,14 @@ export default function LoginPage() {
         email: formData.email,
         password: formData.password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
         toast.error("Invalid email or password");
       } else {
         toast.success("Signed in successfully");
-        router.push("/");
+        router.push(result?.url || callbackUrl);
         router.refresh();
       }
     } catch (error) {
@@ -83,6 +89,26 @@ export default function LoginPage() {
             <p className="mt-2 text-sm text-gray-600">
               Sign in to your account to purchase tickets and access exclusive content
             </p>
+          </div>
+
+          {/* Social Login Buttons */}
+          <div className="mt-6 mb-4 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => signIn('google', { callbackUrl })}
+              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition"
+            >
+              <svg className="h-5 w-5 mr-2" viewBox="0 0 48 48"><g><path fill="#4285F4" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.23l6.85-6.85C35.64 2.69 30.18 0 24 0 14.82 0 6.73 5.82 2.69 14.09l7.98 6.2C12.13 13.13 17.57 9.5 24 9.5z"/><path fill="#34A853" d="M46.1 24.5c0-1.64-.15-3.22-.42-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.64 7.01l7.19 5.6C43.27 37.27 46.1 31.36 46.1 24.5z"/><path fill="#FBBC05" d="M10.67 28.29c-1.01-2.99-1.01-6.19 0-9.18l-7.98-6.2C.64 16.36 0 20.09 0 24c0 3.91.64 7.64 1.69 11.09l7.98-6.2z"/><path fill="#EA4335" d="M24 48c6.18 0 11.64-2.05 15.53-5.59l-7.19-5.6c-2.01 1.35-4.59 2.14-8.34 2.14-6.43 0-11.87-3.63-13.33-8.79l-7.98 6.2C6.73 42.18 14.82 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></g></svg>
+              Sign in with Google
+            </button>
+            <button
+              type="button"
+              onClick={() => signIn('facebook', { callbackUrl })}
+              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition"
+            >
+              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12c0-6.627-5.373-12-12-12S0 5.373 0 12c0 6.006 4.438 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.797c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.491 0-1.953.926-1.953 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.562 22.954 24 18.006 24 12z"/></svg>
+              Sign in with Facebook
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -141,26 +167,22 @@ export default function LoginPage() {
               </button>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={useMemberAccount}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  <UserGroupIcon className="h-5 w-5 mr-2" />
-                  Use Member Account
-                </button>
-
-                <button
-                  type="button"
-                  onClick={useNonMemberAccount}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  <UserCircleIcon className="h-5 w-5 mr-2" />
-                  Use Regular Account
-                </button>
+                {/* Dev account buttons removed */}
               </div>
             </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <a
+                href="/auth/register"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Sign up now
+              </a>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -175,4 +197,12 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}

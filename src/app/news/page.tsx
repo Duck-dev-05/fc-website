@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CalendarIcon, UserIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
 interface NewsArticle {
   id: string;
@@ -69,40 +70,42 @@ export default function NewsPage() {
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
-          <article key={article.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-            {article.imageUrl && (
-              <div className="aspect-w-16 aspect-h-9">
-                <img
-                  src={article.imageUrl}
-                  alt={article.title}
-                  className="object-cover w-full h-48"
-                />
+          <Link key={article.id} href={`/news/${article.id}`} passHref legacyBehavior>
+            <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+              {article.imageUrl && (
+                <div className="aspect-w-16 aspect-h-9">
+                  <img
+                    src={article.imageUrl}
+                    alt={article.title}
+                    className="object-cover w-full h-48"
+                  />
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                  <span className="inline-flex items-center">
+                    <CalendarIcon className="h-4 w-4 mr-1" />
+                    {new Date(article.createdAt).toLocaleDateString()}
+                  </span>
+                  <span className="inline-flex items-center">
+                    <UserIcon className="h-4 w-4 mr-1" />
+                    {article.author}
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  {article.title}
+                </h2>
+                <p className="text-gray-600 line-clamp-3">
+                  {article.content}
+                </p>
+                <div className="mt-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {article.category}
+                  </span>
+                </div>
               </div>
-            )}
-            <div className="p-6">
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                <span className="inline-flex items-center">
-                  <CalendarIcon className="h-4 w-4 mr-1" />
-                  {new Date(article.createdAt).toLocaleDateString()}
-                </span>
-                <span className="inline-flex items-center">
-                  <UserIcon className="h-4 w-4 mr-1" />
-                  {article.author}
-                </span>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                {article.title}
-              </h2>
-              <p className="text-gray-600 line-clamp-3">
-                {article.content}
-              </p>
-              <div className="mt-4">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  {article.category}
-                </span>
-              </div>
-            </div>
-          </article>
+            </article>
+          </Link>
         ))}
       </div>
     </div>

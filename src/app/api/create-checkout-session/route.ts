@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import type { Stripe as StripeType } from 'stripe';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client';
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
     const priceId = TICKET_PRICE_IDS[category as TicketCategory];
 
     // Create Checkout Session
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const params: StripeType.Checkout.SessionCreateParams = {
       mode: 'subscription',
       line_items: [
         {
@@ -77,17 +78,18 @@ export async function POST(request: Request) {
         },
       ],
       metadata: {
-        matchId,
-        quantity: quantity.toString(),
-        category,
-        userId: session.user.id,
-        email: session.user.email,
-        name: session.user.name,
-        image: session.user.image,
+        matchId: String(matchId ?? ''),
+        quantity: String(quantity ?? ''),
+        category: String(category ?? ''),
+        userId: String(session.user.id ?? ''),
+        email: String(session.user.email ?? ''),
+        name: String(session.user.name ?? ''),
+        image: String(session.user.image ?? ''),
       },
       success_url: `${process.env.NEXTAUTH_URL}/tickets/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/tickets`,
-    });
+    };
+    const checkoutSession = await stripe.checkout.sessions.create(params);
 
     return NextResponse.json({
       sessionId: checkoutSession.id,

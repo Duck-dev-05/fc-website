@@ -4,8 +4,16 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client';
 
+type TicketCategory = 'standard' | 'premium' | 'vip';
+
+const PRICE_MULTIPLIERS: Record<TicketCategory, number> = {
+  standard: 1,
+  premium: 1.5,
+  vip: 2
+};
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-04-30.basil',
 });
 
 const prisma = new PrismaClient();
@@ -22,6 +30,14 @@ export async function POST(request: Request) {
     }
 
     const { matchId, quantity, category } = await request.json();
+
+    // Validate category
+    if (!Object.keys(PRICE_MULTIPLIERS).includes(category)) {
+      return NextResponse.json(
+        { error: 'Invalid ticket category' },
+        { status: 400 }
+      );
+    }
 
     // Validate the match exists and has capacity
     const match = await prisma.match.findUnique({
@@ -45,12 +61,7 @@ export async function POST(request: Request) {
 
     // Calculate price
     const basePrice = 30; // Base price per ticket
-    const multiplier = {
-      standard: 1,
-      premium: 1.5,
-      vip: 2
-    }[category] || 1;
-    
+    const multiplier = PRICE_MULTIPLIERS[category as TicketCategory];
     const amount = Math.round(basePrice * quantity * multiplier * 100); // Convert to cents
 
     // Create a PaymentIntent with the order amount and currency

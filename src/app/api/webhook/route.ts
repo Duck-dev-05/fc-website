@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import type { Stripe as StripeType } from 'stripe';
 import { PrismaClient } from '@prisma/client';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -46,9 +47,9 @@ export async function POST(request: Request) {
             isMember: true,
             memberSince: new Date(),
             membershipType: planId === 'premium' ? 'Premium' : 'VIP',
-            email: session.metadata?.email,
-            name: session.metadata?.name,
-            image: session.metadata?.image,
+            email: session.metadata?.email || '',
+            name: session.metadata?.name || '',
+            image: session.metadata?.image || '',
           },
         });
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
             planId: planId!,
             stripeCustomerId: customer.id,
             stripeSubscriptionId: subscription.id,
-            endDate: new Date(subscription.current_period_end * 1000),
+            endDate: new Date((subscription as any).current_period_end * 1000),
           },
         });
       } else {

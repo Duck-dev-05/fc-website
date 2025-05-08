@@ -44,31 +44,68 @@ export interface User {
   role: string;
 }
 
-// Match API calls
+// Match API calls (no caching)
 export const matchApi = {
-  getAll: () => api.get<Match[]>('/match'),
-  getById: (id: number) => api.get<Match>(`/match/${id}`),
-  create: (match: Omit<Match, 'id'>) => api.post<Match>('/match', match),
-  update: (id: number, match: Match) => api.put(`/match/${id}`, match),
-  delete: (id: number) => api.delete(`/match/${id}`),
+  getAll: async () => {
+    const response = await api.get<Match[]>('/match');
+    return response;
+  },
+  getById: async (id: number) => {
+    const response = await api.get<Match>(`/match/${id}`);
+    return response;
+  },
+  create: async (match: Omit<Match, 'id'>) => {
+    const response = await api.post<Match>('/match', match);
+    return response;
+  },
+  update: async (id: number, match: Match) => {
+    const response = await api.put(`/match/${id}`, match);
+    return response;
+  },
+  delete: async (id: number) => {
+    const response = await api.delete(`/match/${id}`);
+    return response;
+  },
 };
 
-// Ticket API calls
+// Ticket API calls (no caching)
 export const ticketApi = {
-  getAll: () => api.get<Ticket[]>('/ticket'),
-  getById: (id: number) => api.get<Ticket>(`/ticket/${id}`),
-  create: (ticket: Omit<Ticket, 'id'>) => api.post<Ticket>('/ticket', ticket),
-  update: (id: number, ticket: Ticket) => api.put(`/ticket/${id}`, ticket),
-  delete: (id: number) => api.delete(`/ticket/${id}`),
+  getAll: async () => {
+    const response = await api.get<Ticket[]>('/ticket');
+    return response;
+  },
+  getById: async (id: number) => {
+    const response = await api.get<Ticket>(`/ticket/${id}`);
+    return response;
+  },
+  create: async (ticket: Omit<Ticket, 'id'>) => {
+    const response = await api.post<Ticket>('/ticket', ticket);
+    return response;
+  },
+  update: async (id: number, ticket: Ticket) => {
+    const response = await api.put(`/ticket/${id}`, ticket);
+    return response;
+  },
+  delete: async (id: number) => {
+    const response = await api.delete(`/ticket/${id}`);
+    return response;
+  },
 };
 
-// User API calls
+// User API calls (no caching)
 export const userApi = {
-  login: (email: string, password: string) => 
-    api.post<{ token: string; user: User }>('/user/login', { email, password }),
-  register: (userData: { username: string; email: string; password: string }) =>
-    api.post<User>('/user/register', userData),
-  getProfile: () => api.get<User>('/user/profile'),
+  login: async (email: string, password: string) => {
+    const response = await api.post<{ token: string; user: User }>('/user/login', { email, password });
+    return response;
+  },
+  register: async (userData: { username: string; email: string; password: string }) => {
+    const response = await api.post<User>('/user/register', userData);
+    return response;
+  },
+  getProfile: async () => {
+    const response = await api.get<User>('/user/profile');
+    return response;
+  },
 };
 
 export default api; 

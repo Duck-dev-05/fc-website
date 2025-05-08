@@ -1,15 +1,28 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getCachedData, setCachedData, deleteCachedData } from '@/lib/redis';
 
 const prisma = new PrismaClient();
+const CACHE_KEY = 'news:all';
 
 export async function GET() {
   try {
+    // Try to get cached data first
+    const cachedArticles = await getCachedData(CACHE_KEY);
+    if (cachedArticles) {
+      return NextResponse.json(cachedArticles);
+    }
+
+    // If no cache, fetch from database
     const articles = await prisma.news.findMany({
       orderBy: {
         createdAt: 'desc',
       },
     });
+
+    // Cache the results for 1 hour
+    await setCachedData(CACHE_KEY, articles, 3600);
 
     return NextResponse.json(articles);
   } catch (error) {
@@ -34,6 +47,10 @@ export async function POST(req: Request) {
         category: body.category,
       },
     });
+
+    // Invalidate the cache when new article is added
+    await deleteCachedData(CACHE_KEY);
+
     return NextResponse.json(article, { status: 201 });
   } catch (error) {
     console.error('Failed to create news:', error);

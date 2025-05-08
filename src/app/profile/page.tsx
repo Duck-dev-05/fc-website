@@ -6,29 +6,43 @@ import { useState, useEffect } from "react";
 import { formatDistanceToNow, format } from 'date-fns';
 import { Tab } from '@headlessui/react';
 
+interface Profile {
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  phone?: string;
+  dob?: string;
+  address?: string;
+  gender?: string;
+  nationality?: string;
+  language?: string;
+  bio?: string;
+  website?: string;
+  occupation?: string;
+  favoriteTeam?: string;
+  username?: string;
+  emailVerified?: boolean;
+  memberSince?: string;
+  role?: string;
+  accounts?: any[];
+  isMember?: boolean;
+  membershipType?: string;
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMember, setIsMember] = useState<boolean | null>(null);
-  const [membershipType, setMembershipType] = useState<string>('Standard'); // Mocked
-  const [membershipExpiry, setMembershipExpiry] = useState<Date | null>(null); // Mocked
-  const [joinDate, setJoinDate] = useState<Date | null>(null); // Mocked
-  const [lastLogin, setLastLogin] = useState<Date | null>(null); // Mocked
+  const [membershipType, setMembershipType] = useState<string>('Standard');
+  const [membershipExpiry, setMembershipExpiry] = useState<Date | null>(null);
+  const [joinDate, setJoinDate] = useState<Date | null>(null);
+  const [lastLogin, setLastLogin] = useState<Date | null>(null);
   const [sessionExpiry, setSessionExpiry] = useState<Date | null>(null);
-  const [username] = useState('testuser');
-  const [phone] = useState('+1 555-123-4567');
-  const [dob] = useState('1998-05-15');
-  const [address] = useState('123 Main St, City, Country');
-  const [emailVerified] = useState(true);
-  const [userId] = useState('u123456789');
-  const [role] = useState('user');
-  const [socialLinks] = useState([
-    { type: 'Instagram', url: 'https://instagram.com/testuser' },
-    { type: 'Facebook', url: 'https://facebook.com/testuser' },
-  ]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const profileCompletion = 80; // percent, mocked
 
   const tabs = ['Account', 'Membership', 'Security'];
@@ -108,9 +122,12 @@ export default function ProfilePage() {
     profile?.occupation,
     profile?.favoriteTeam,
   ].filter(Boolean).length / 13 * 100;
-  const socialLinksFallback = [
-    profile?.website ? { type: 'Website', url: profile.website } : null,
-  ].filter(Boolean);
+
+  // Use session info for social login if available
+  const displayName = session?.user?.name || profile?.name || 'User';
+  const displayEmail = session?.user?.email || profile?.email || '';
+  const displayImage = session?.user?.image || profile?.image || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+  const displayId = profile?.id || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-12 px-4 flex flex-col items-center">
@@ -139,19 +156,19 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center w-full">
                 {/* Profile Picture and Name */}
                 <div className="flex flex-col items-center mb-6">
-                  {profile?.image ? (
-                    <img src={profile.image} alt="Profile" className="h-24 w-24 rounded-full object-cover mb-3 border-4 border-blue-200 shadow" />
+                  {displayImage ? (
+                    <img src={displayImage} alt="Profile" className="h-24 w-24 rounded-full object-cover mb-3 border-4 border-blue-200 shadow" />
                   ) : (
                     <UserCircleIcon className="h-24 w-24 text-blue-300 mb-3" />
                   )}
-                  <h1 className="text-4xl font-extrabold text-blue-700 mb-1">{profile?.name || 'User'}</h1>
+                  <h1 className="text-4xl font-extrabold text-blue-700 mb-1">{displayName}</h1>
                   <div className="flex items-center gap-2 text-gray-500 text-base mb-1">
                     <EnvelopeIcon className="h-5 w-5" />
-                    {profile?.email || <span className="italic text-gray-400">Not set</span>}
+                    {displayEmail || <span className="italic text-gray-400">Not set</span>}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <IdentificationIcon className="h-4 w-4" />
-                    User ID: <span className="font-mono text-gray-600">{profile?.id || <span className="italic text-gray-400">Not set</span>}</span>
+                    User ID: <span className="font-mono text-gray-600">{displayId || <span className="italic text-gray-400">Not set</span>}</span>
                   </div>
                 </div>
                 {/* Divider */}
@@ -213,9 +230,17 @@ export default function ProfilePage() {
                 </div>
                 {/* Social links */}
                 <div className="flex gap-4 mt-2 mb-6">
-                  {profile?.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-base font-medium">Website</a>
-                  )}
+                  {socialLinks.map((link, index) => (
+                    <a 
+                      key={index}
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-600 hover:underline text-base font-medium"
+                    >
+                      {link.type}
+                    </a>
+                  ))}
                 </div>
                 <button
                   className="px-8 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-all text-base"

@@ -2,11 +2,20 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { getCachedData, setCachedData, deleteCachedData } from '@/lib/redis';
 
 const prisma = new PrismaClient();
+const CACHE_KEY = 'tickets:all';
+const CACHE_TTL = 900; // 15 minutes
 
 export async function GET() {
   try {
+    // Try to get cached data first
+    const cachedTickets = await getCachedData(CACHE_KEY);
+    if (cachedTickets) {
+      return NextResponse.json(cachedTickets);
+    }
+
     // Get all matches without date filtering for debugging
     const matches = await prisma.match.findMany({
       orderBy: {
@@ -30,6 +39,9 @@ export async function GET() {
     }));
 
     console.log('Transformed tickets:', tickets); // Debug log
+
+    // Cache the tickets data
+    await setCachedData(CACHE_KEY, tickets, CACHE_TTL);
 
     return NextResponse.json(tickets);
   } catch (error) {
@@ -84,6 +96,9 @@ export async function POST(request: Request) {
         userId: session.user.id,
       },
     });
+
+    // Invalidate the tickets cache when a new ticket is purchased
+    await deleteCachedData(CACHE_KEY);
 
     return NextResponse.json(ticket);
   } catch (error) {

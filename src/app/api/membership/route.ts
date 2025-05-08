@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import type { Stripe as StripeType } from 'stripe';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
@@ -64,7 +65,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid or free plan selected' }, { status: 400 });
     }
     const stripeSession = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      payment_method_types: ['card'],
+      mode: 'subscription' as StripeType.Checkout.SessionCreateParams.Mode,
       line_items: [
         {
           price: plan.stripePriceId,
@@ -74,9 +76,9 @@ export async function POST(request: Request) {
       metadata: {
         userId: session.user.id,
         planId: plan.id,
-        email: session.user.email,
-        name: session.user.name,
-        image: session.user.image,
+        email: session.user.email || '',
+        name: session.user.name || '',
+        image: session.user.image || '',
       },
       success_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/orders?success=1`,
       cancel_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/membership?canceled=1`,

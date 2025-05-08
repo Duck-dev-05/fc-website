@@ -52,6 +52,9 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    console.log('ORDERS API DEBUG: tickets', tickets);
+    console.log('ORDERS API DEBUG: memberships', memberships);
+
     // Combine and format the orders
     const orders: Order[] = [
       ...tickets.map((ticket: Ticket & { match: Match }) => ({
@@ -81,6 +84,8 @@ export async function GET(req: NextRequest) {
         },
       })),
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    console.log('ORDERS API DEBUG: orders', orders);
 
     return NextResponse.json({ orders });
   } catch (error) {
