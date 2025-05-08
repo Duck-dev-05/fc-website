@@ -1,6 +1,7 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
 
-const ADMIN_API_URL = 'http://localhost:3001/api/players'; // Update if your admin runs elsewhere
+const ADMIN_API_URL = process.env.ADMIN_API_URL || 'http://localhost:3001/api/players';
 
 export async function GET() {
   try {
