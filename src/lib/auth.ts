@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import { PrismaClient, User as PrismaUser } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { compare } from 'bcrypt'
 import GoogleProvider from 'next-auth/providers/google'
 import FacebookProvider from 'next-auth/providers/facebook'
@@ -38,6 +38,9 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
+  },
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
   },
   providers: [
     CredentialsProvider({
@@ -169,7 +172,7 @@ export const authOptions: NextAuthOptions = {
               where: { id: existingUser.id },
               data: {
                 name: user.name,
-                image: user.image,
+                image: user.image || (profile && profile.picture) || existingUser.image,
                 emailVerified: new Date(),
               }
             })

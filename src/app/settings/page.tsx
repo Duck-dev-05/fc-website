@@ -45,7 +45,7 @@ export default function SettingsPage() {
           <h2 className="mt-4 text-xl font-bold text-gray-900">Login Required</h2>
           <p className="mt-2 text-gray-600">Please sign in to view your settings.</p>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/auth/signin')}
             className="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Sign In

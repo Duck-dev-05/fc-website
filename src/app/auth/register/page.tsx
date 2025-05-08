@@ -28,8 +28,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSuccess("Registration successful! Redirecting to login...");
-        setTimeout(() => router.push("/login"), 1500);
+        setSuccess("Registration successful! You can now sign in.");
       } else {
         setError(data.error || "Registration failed");
       }
@@ -52,6 +51,12 @@ export default function RegisterPage() {
           <div className="flex flex-col items-center justify-center py-8">
             <CheckCircleIcon className="h-12 w-12 text-green-500 mb-2" />
             <div className="text-green-700 font-semibold mb-2">{success}</div>
+            <button
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+              onClick={() => router.push('/auth/signin')}
+            >
+              Go to Sign In
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -108,7 +113,7 @@ export default function RegisterPage() {
           </form>
         )}
         <div className="mt-6 text-center text-sm text-gray-600">
-          Already have an account? <a href="/login" className="text-blue-600 hover:underline font-medium">Login</a>
+          Already have an account? <a href="/auth/signin" className="text-blue-600 hover:underline font-medium">Sign in</a>
         </div>
       </div>
     </div>

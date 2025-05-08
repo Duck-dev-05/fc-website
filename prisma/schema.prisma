@@ -69,6 +69,8 @@ model User {
   sessions      Session[]
   tickets       Ticket[]
   memberships   Membership[]
+  resetToken        String?
+  resetTokenExpiry  DateTime?
 }
 
 model Match {

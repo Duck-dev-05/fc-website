@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useSession, signOut } from 'next-auth/react'
+import { useSession, signIn, signOut } from 'next-auth/react'
 import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon } from '@heroicons/react/24/outline'
+import { GlobeAltIcon } from '@heroicons/react/24/solid'
 
 const navigation = [
   { name: 'About Us', href: '/about' },
@@ -16,20 +17,24 @@ const navigation = [
   { name: 'Gallery', href: '/gallery' },
 ]
 
+const languages: Record<string, { name: string; flag: string }> = {
+  en: { name: 'English', flag: '🇬🇧' },
+  vi: { name: 'Tiếng Việt', flag: '🇻🇳' }
+}
+
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  // Demo login state (replace with real auth in production)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { data: session, status } = useSession();
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [search, setSearch] = useState("");
   const pathname = usePathname()
-  const { data: session } = useSession()
   const menuRef = useRef<HTMLDivElement>(null);
   const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false)
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [lang, setLang] = useState('en');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo, just log the query
     if (search.trim()) {
       console.log("Search query:", search);
     }
@@ -45,6 +50,29 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAccountMenu]);
+
+  // Google Translate language switch
+  const handleLanguageSwitch = (language: string) => {
+    setLang(language);
+    let tries = 0;
+    const maxTries = 30; // Try for up to 3 seconds
+    const trySetLanguage = () => {
+      const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (select) {
+        if (select.value !== language) {
+          select.value = language;
+          select.dispatchEvent(new Event('change'));
+        }
+      } else if (tries < maxTries) {
+        tries++;
+        setTimeout(trySetLanguage, 100);
+      } else {
+        console.warn('Google Translate widget not loaded.');
+      }
+    };
+    setTimeout(trySetLanguage, 500);
+    setShowLanguageMenu(false);
+  };
 
   return (
     <nav className="bg-gradient-to-b from-white to-blue-50/60 shadow-md sticky top-0 z-50">
@@ -193,6 +221,45 @@ export default function Navbar() {
                 )}
               </div>
             </div>
+            {/* Language Switch Button */}
+            <div className="ml-4 flex items-center gap-2">
+              <div className="relative group">
+                <button
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-blue-50 transition-colors duration-200"
+                  onClick={() => setShowLanguageMenu((v) => !v)}
+                >
+                  <GlobeAltIcon className="h-5 w-5 text-blue-600" />
+                  <span className="hidden sm:inline">{languages[lang].name}</span>
+                  <span className="sm:hidden">{languages[lang].flag}</span>
+                  <svg className={`h-4 w-4 transition-transform duration-200 ${showLanguageMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showLanguageMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-blue-100 animate-fade-in">
+                    {Object.entries(languages).map(([code, { name, flag }]) => (
+                      <button
+                        key={code}
+                        onClick={() => handleLanguageSwitch(code)}
+                        className={`w-full flex items-center gap-3 px-4 py-2 text-sm ${
+                          lang === code
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                        } transition-colors duration-200`}
+                      >
+                        <span className="text-lg">{flag}</span>
+                        <span>{name}</span>
+                        {lang === code && (
+                          <svg className="h-4 w-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -314,6 +381,30 @@ export default function Navbar() {
                     Login
                   </Link>
                 )}
+              </div>
+              {/* Mobile Language Switch */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex flex-col gap-2">
+                  {Object.entries(languages).map(([code, { name, flag }]) => (
+                    <button
+                      key={code}
+                      onClick={() => handleLanguageSwitch(code)}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium ${
+                        lang === code
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                      } transition-colors duration-200`}
+                    >
+                      <span className="text-lg">{flag}</span>
+                      <span>{name}</span>
+                      {lang === code && (
+                        <svg className="h-4 w-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

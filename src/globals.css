@@ -1,0 +1,8 @@
+/* Hide Google Translate banner and gadget, but not the main widget div */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-gadget-simple {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+} 

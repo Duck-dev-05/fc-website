@@ -1,10 +1,39 @@
-import { getProviders } from "next-auth/react";
+"use client";
+import { useState, useEffect } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import SignInButton from "./SignInButton";
 import Image from "next/image";
 import Link from "next/link";
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
-export default async function SignIn() {
-  const providers = await getProviders();
+export default function SignIn() {
+  const [providers, setProviders] = useState<any>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    getProviders().then(setProviders);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+    setLoading(false);
+    if (res?.ok) {
+      window.location.href = "/";
+    } else {
+      setError(res?.error || "Invalid credentials");
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -12,7 +41,7 @@ export default async function SignIn() {
         <div className="text-center">
           <Link href="/" className="inline-block">
             <Image
-              src="/logo.png"
+              src="/Logo.jpg"
               alt="Club Logo"
               width={80}
               height={80}
@@ -34,7 +63,7 @@ export default async function SignIn() {
           <div className="space-y-4">
             {providers &&
               Object.values(providers).map((provider) => (
-                <SignInButton key={provider.id} provider={provider} />
+                <SignInButton key={(provider as any).id} provider={provider as import("next-auth/react").ClientSafeProvider} />
               ))}
           </div>
 
@@ -47,7 +76,7 @@ export default async function SignIn() {
             </div>
           </div>
 
-          <form className="mt-8 space-y-6" action="#" method="POST">
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4 rounded-md shadow-sm">
               <div>
                 <label htmlFor="email" className="sr-only">
@@ -61,23 +90,45 @@ export default async function SignIn() {
                   required
                   className="relative block w-full rounded-md border-0 py-2 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                   placeholder="Email address"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               <div>
                 <label htmlFor="password" className="sr-only">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="relative block w-full rounded-md border-0 py-2 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                  placeholder="Password"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    className="relative block w-full rounded-md border-0 py-2 px-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    placeholder="Password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="h-5 w-5" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
+
+            {error && <div className="text-red-600 text-sm text-center">{error}</div>}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -103,8 +154,9 @@ export default async function SignIn() {
               <button
                 type="submit"
                 className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                disabled={loading}
               >
-                Sign in
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>

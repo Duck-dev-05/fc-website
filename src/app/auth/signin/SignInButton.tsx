@@ -7,6 +7,8 @@ interface SignInButtonProps {
 }
 
 export default function SignInButton({ provider }: SignInButtonProps) {
+  if (provider.id === 'credentials') return null;
+
   const getProviderIcon = (name: string) => {
     switch (name) {
       case "Google":
@@ -69,11 +71,7 @@ export default function SignInButton({ provider }: SignInButtonProps) {
   };
 
   const handleSignIn = async () => {
-    if (provider.id === 'google') {
-      window.location.href = `/api/auth/google?callbackUrl=${encodeURIComponent('/')}`;
-    } else {
-      signIn(provider.id, { callbackUrl: '/' });
-    }
+    signIn(provider.id, { callbackUrl: '/' });
   };
 
   return (
