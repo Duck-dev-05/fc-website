@@ -1,7 +1,8 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 const pages = [
   { name: "About Us", href: "/about", description: "Learn more about FC ESCUELA, our mission, and our story." },
@@ -20,7 +21,7 @@ const pages = [
   { name: "Reset Password", href: "/auth/reset-password", description: "Set a new password for your account." },
 ];
 
-export default function SearchPage() {
+function SearchPageInner() {
   const searchParams = useSearchParams();
   const query = searchParams.get("query")?.toLowerCase() || "";
   const [newsResults, setNewsResults] = useState<any[]>([]);
@@ -64,7 +65,6 @@ export default function SearchPage() {
   return (
     <div className="max-w-3xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Search Results for "{searchParams.get("query")}"</h1>
-      {loading && <div>Loading...</div>}
       {!loading && !hasResults && <div>No results found.</div>}
       <ul>
         {pageResults.length > 0 && (
@@ -133,5 +133,13 @@ export default function SearchPage() {
         )}
       </ul>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchPageInner />
+    </Suspense>
   );
 } 

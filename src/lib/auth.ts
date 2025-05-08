@@ -172,7 +172,11 @@ export const authOptions: NextAuthOptions = {
               where: { id: existingUser.id },
               data: {
                 name: user.name,
-                image: user.image || (profile && profile.picture) || existingUser.image,
+                image:
+                  user.image ||
+                  (account?.provider === 'google' && (profile as import('next-auth/providers/google').GoogleProfile).picture) ||
+                  (account?.provider === 'facebook' && (profile as import('next-auth/providers/facebook').FacebookProfile).picture?.data?.url) ||
+                  existingUser.image,
                 emailVerified: new Date(),
               }
             })
@@ -225,7 +229,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   pages: {
-    signIn: '/login',
+    signIn: '/auth/signin',
     error: '/auth/error',
     signOut: '/auth/signout',
   },
