@@ -1,115 +1,143 @@
-'use client'
+"use client";
+export const dynamic = "force-dynamic";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook } from "react-icons/fa";
+import { useState, Suspense, useEffect } from "react";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+function SignInPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get('error');
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-export default function SignIn() {
-  const router = useRouter()
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        toast.error('Invalid email or password')
-      } else {
-        toast.success('Signed in successfully')
-        router.push('/')
-        router.refresh()
-      }
-    } catch (error) {
-      toast.error('Something went wrong')
-      console.error('Sign in error:', error)
-    } finally {
-      setLoading(false)
-    }
+  let errorMessage = error;
+  if (errorParam === 'OAuthAccountNotLinked') {
+    errorMessage = 'An account already exists with this email, but it was registered using a different sign-in method. Please use the original method to log in.';
   }
+
+  // Prefill email from localStorage
+  useEffect(() => {
+    const lastEmail = typeof window !== 'undefined' ? localStorage.getItem("lastLoginEmail") : null;
+    if (lastEmail) setForm(f => ({ ...f, email: lastEmail }));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const res = await signIn("credentials", {
+      redirect: false,
+      email: form.email,
+      password: form.password,
+    });
+    setLoading(false);
+    if (res?.ok) {
+      if (typeof window !== 'undefined') localStorage.setItem("lastLoginEmail", form.email);
+      router.push("/");
+    } else {
+      setError(res?.error || "Invalid credentials");
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-            </div>
-          </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-2xl border border-blue-100 flex flex-col items-center">
+        <Image src="/images/logo.jpg" alt="FC ESCUELA" width={64} height={64} className="rounded-lg mb-4" />
+        <h2 className="text-2xl font-bold mb-2 text-center text-gray-900">Sign In</h2>
+        <p className="text-gray-500 text-sm mb-6 text-center">Sign in to your account to continue</p>
+        <form onSubmit={handleSubmit} className="w-full space-y-4 mb-2">
           <div>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 border-gray-300 transition placeholder-gray-400"
+              placeholder="Email"
+              autoComplete="email"
+            />
+          </div>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 border-gray-300 transition placeholder-gray-400 pr-10"
+              placeholder="Password"
+              autoComplete="current-password"
+            />
             <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              tabIndex={-1}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600"
+              onClick={() => setShowPassword((v) => !v)}
             >
-              {loading ? (
-                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </span>
-              ) : null}
-              {loading ? 'Signing in...' : 'Sign in'}
+              {showPassword ? <AiOutlineEyeInvisible className="h-5 w-5" /> : <AiOutlineEye className="h-5 w-5" />}
             </button>
           </div>
+          <div className="flex justify-end mb-2">
+            <a href="/auth/forgot-password" className="text-blue-600 hover:underline text-sm font-medium">Forgot your password?</a>
+          </div>
+          {errorMessage && <div className="text-red-600 text-sm text-center">{errorMessage}</div>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-60"
+          >
+            {loading ? (
+              <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : null}
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
         </form>
+        <div className="flex items-center w-full my-4">
+          <div className="flex-grow border-t border-gray-200" />
+          <span className="mx-2 text-gray-400 text-xs">or</span>
+          <div className="flex-grow border-t border-gray-200" />
+        </div>
+        <button
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-100 transition mb-4 shadow-sm"
+          onClick={() => signIn("google", { prompt: "select_account", callbackUrl: "/" })}
+        >
+          <FcGoogle className="h-5 w-5" />
+          Sign in with Google
+        </button>
+        <button
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition mb-4 shadow-sm"
+          onClick={() => signIn("facebook", { callbackUrl: "/" })}
+        >
+          <FaFacebook className="h-5 w-5" />
+          Sign in with Facebook
+        </button>
+        <div className="mt-2 text-center text-sm text-gray-600">
+          Don&apos;t have an account? <a href="/auth/register" className="text-blue-600 hover:underline font-medium">Register</a>
+        </div>
       </div>
     </div>
-  )
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignInPageInner />
+    </Suspense>
+  );
 } 

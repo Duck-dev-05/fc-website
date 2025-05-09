@@ -149,6 +149,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Gallery Section */}
+      <section className="py-16 bg-white">
+        <div className="container-custom">
+          <h2 className="text-3xl font-bold mb-8 text-center">Club Gallery</h2>
+          <p className="text-xl text-gray-600 mb-12 text-center max-w-3xl mx-auto">
+            Relive our most memorable moments, from thrilling matches to community events
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              "/images/476090611_607359335376923_6698951151074247924_n.jpg",
+              "/images/475848156_607359262043597_4715828726527841259_n.jpg",
+              "/images/475969919_607359408710249_8516488549860876522_n.jpg"
+            ].map((src, index) => (
+              <div key={index} className="group relative aspect-square overflow-hidden rounded-lg shadow-lg">
+                <Image
+                  src={src}
+                  alt={`Gallery image ${index + 1}`}
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                    <h3 className="text-lg font-semibold">Club Moment {index + 1}</h3>
+                    <p className="text-sm opacity-90">Click to view full image</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/gallery" className="btn-primary">
+              View Full Photo
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="bg-gray-100 py-16">
         <div className="container-custom text-center">

@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LockClosedIcon, UserCircleIcon, StarIcon, PhoneIcon, EnvelopeIcon, UserIcon, IdentificationIcon, MapPinIcon, CalendarIcon, CheckCircleIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon, UserCircleIcon, StarIcon, PhoneIcon, EnvelopeIcon, UserIcon, IdentificationIcon, MapPinIcon, CalendarIcon, CheckCircleIcon, UserGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from "react";
 import { formatDistanceToNow, format } from 'date-fns';
 import { Tab } from '@headlessui/react';
@@ -28,6 +28,7 @@ interface Profile {
   accounts?: any[];
   isMember?: boolean;
   membershipType?: string;
+  roles?: string[];
 }
 
 export default function ProfilePage() {
@@ -85,7 +86,7 @@ export default function ProfilePage() {
           <h2 className="mt-4 text-xl font-bold text-gray-900">Login Required</h2>
           <p className="mt-2 text-gray-600">Please sign in to view your profile.</p>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/auth/signin')}
             className="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Sign In
@@ -132,6 +133,21 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-12 px-4 flex flex-col items-center">
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-lg w-full flex flex-col items-center border border-blue-100">
+        <div className="relative w-full mb-4">
+          {(session?.user?.roles || profile?.roles || []).includes('admin') && (
+            <a
+              href="http://localhost:3001/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute -top-8 right-0 flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-700 to-blue-500 text-white font-bold shadow-lg hover:from-blue-800 hover:to-blue-600 transition-all text-lg z-10 border-4 border-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              title="Go to Admin Dashboard"
+              style={{ minWidth: '200px', justifyContent: 'center' }}
+            >
+              <Squares2X2Icon className="h-6 w-6 mr-2 text-white" />
+              Admin Dashboard
+            </a>
+          )}
+        </div>
         <Tab.Group>
           <Tab.List className="flex space-x-2 mb-6">
             {tabs.map((tab) => (
@@ -178,7 +194,20 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2 text-sm"><UserIcon className="h-5 w-5 text-blue-400" /><span className="text-gray-500">Username:</span></div>
                   <div className="text-blue-900 font-medium text-sm flex items-center">{profile?.username || <span className="italic text-gray-400">Not set</span>}</div>
                   <div className="flex items-center gap-2 text-sm"><UserGroupIcon className="h-5 w-5 text-blue-400" /><span className="text-gray-500">Role:</span></div>
-                  <div className="text-blue-700 font-semibold text-sm flex items-center">user</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {(session?.user?.roles || profile?.roles || ['user']).map((role: string) => (
+                      <span
+                        key={role}
+                        className={
+                          role === 'admin'
+                            ? 'bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold border border-red-300'
+                            : 'bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold border border-blue-200'
+                        }
+                      >
+                        {role.charAt(0).toUpperCase() + role.slice(1)}
+                      </span>
+                    ))}
+                  </div>
                   <div className="flex items-center gap-2 text-sm"><PhoneIcon className="h-5 w-5 text-blue-400" /><span className="text-gray-500">Phone:</span></div>
                   <div className="text-blue-900 font-medium text-sm flex items-center">{profile?.phone || <span className="italic text-gray-400">Not set</span>}</div>
                   <div className="flex items-center gap-2 text-sm"><CalendarIcon className="h-5 w-5 text-blue-400" /><span className="text-gray-500">Date of Birth:</span></div>

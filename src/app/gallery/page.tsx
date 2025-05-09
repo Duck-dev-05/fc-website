@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { LockClosedIcon, PhotoIcon } from '@heroicons/react/24/outline';
 
 // Dynamically generated gallery images from /images directory
 const galleryImages = [
@@ -124,14 +126,30 @@ const tabs = [
 ];
 
 export default function GalleryPage() {
+  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImg, setModalImg] = useState<string | null>(null);
   const [modalDesc, setModalDesc] = useState<string>("");
   const [modalIdx, setModalIdx] = useState<number>(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadCount, setUploadCount] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState("general");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   const images = tabs[activeTab].images;
+
+  // Fetch upload count when user is authenticated
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch(`/api/gallery/count?userId=${session.user.id}`)
+        .then(res => res.json())
+        .then(data => setUploadCount(data.count))
+        .catch(console.error);
+    }
+  }, [session]);
 
   const handleImageClick = (src: string, idx: number) => {
     setModalImg(src);
@@ -196,100 +214,195 @@ export default function GalleryPage() {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("category", selectedCategory);
+
+      const response = await fetch("/api/gallery/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to upload image");
+      }
+
+      // Update upload count
+      setUploadCount(prev => prev + 1);
+      
+      // Refresh the page to show the new image
+      window.location.reload();
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-12 px-4">
-      <h1 className="text-4xl font-extrabold text-blue-700 mb-10 text-center drop-shadow">Gallery</h1>
-      <div className="flex justify-center mb-8">
-        {tabs.map((tab, idx) => (
-          <button
-            key={tab.label}
-            onClick={() => setActiveTab(idx)}
-            className={`px-6 py-2 mx-2 rounded-full font-semibold transition-all duration-200 shadow-sm border-2 ${
-              activeTab === idx
-                ? "bg-blue-600 text-white border-blue-600 scale-105"
-                : "bg-white text-blue-700 border-blue-200 hover:bg-blue-100"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {images.map((src, idx) => (
-          <div
-            key={idx}
-            className={`rounded-2xl overflow-hidden shadow-lg bg-white hover:shadow-2xl transition-all group cursor-pointer ${activeTab === 0 && idx === 0 && src === "/images/Team.jpg" ? "ring-4 ring-blue-500 ring-offset-2 shadow-2xl" : ""}`}
-            onClick={() => handleImageClick(src, idx)}
-          >
-            <div className="relative w-full h-64">
-              <Image
-                src={src}
-                alt={`Gallery image ${idx + 1}`}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority={idx < 4}
-              />
-            </div>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Gallery</h1>
+            {session && (
+              <p className="text-sm text-gray-600 mt-1">
+                You have uploaded {uploadCount} images
+              </p>
+            )}
           </div>
-        ))}
-      </div>
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in-modal" onClick={() => setModalOpen(false)}>
-          <div ref={modalRef} className="relative flex flex-col items-center animate-scale-in max-w-4xl w-full" onClick={e => e.stopPropagation()} tabIndex={-1}>
-            {/* Close button floating outside */}
-            <button className="absolute -top-8 right-0 text-5xl text-blue-700 hover:text-red-500 font-extrabold bg-white/90 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl border-2 border-blue-200 transition-all focus:outline-none z-20" onClick={() => setModalOpen(false)} aria-label="Close">&times;</button>
-            <div className="bg-white/80 rounded-3xl shadow-2xl border border-blue-200 p-8 max-w-4xl w-full flex flex-col items-center">
-              {/* Left arrow */}
-              <button
-                className={`absolute left-0 top-1/2 -translate-y-1/2 text-5xl bg-white/90 rounded-full w-16 h-16 flex items-center justify-center shadow-xl border-2 border-blue-200 text-blue-700 hover:text-blue-900 transition-all focus:outline-none z-10 ${modalIdx === 0 ? 'opacity-30 pointer-events-none' : ''}`}
-                onClick={showPrev}
-                tabIndex={0}
-                aria-label="Previous image"
+          {session && (
+            <div className="flex items-center gap-4">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
-                &#8592;
-              </button>
-              {/* Right arrow */}
+                <option value="general">General</option>
+                <option value="after-match">After Match</option>
+                <option value="events">Events</option>
+              </select>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="image/*"
+                className="hidden"
+              />
               <button
-                className={`absolute right-0 top-1/2 -translate-y-1/2 text-5xl bg-white/90 rounded-full w-16 h-16 flex items-center justify-center shadow-xl border-2 border-blue-200 text-blue-700 hover:text-blue-900 transition-all focus:outline-none z-10 ${modalIdx === images.length - 1 ? 'opacity-30 pointer-events-none' : ''}`}
-                onClick={showNext}
-                tabIndex={0}
-                aria-label="Next image"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                &#8594;
+                <PhotoIcon className="h-5 w-5 mr-2" />
+                {uploading ? "Uploading..." : "Upload Image"}
               </button>
-              <div className="w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
-                <div className="relative w-full h-[65vh] max-h-[75vh] max-w-4xl mx-auto flex items-center justify-center transition-all duration-300">
-                  <Image
-                    src={modalImg!}
-                    alt={modalDesc}
-                    fill
-                    className="object-contain rounded-2xl"
-                    sizes="100vw"
-                  />
-                </div>
-                <div className="mt-8 text-3xl text-center text-blue-900 font-extrabold tracking-wide drop-shadow-sm px-4">{modalDesc}</div>
+            </div>
+          )}
+        </div>
+
+        {uploadError && (
+          <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-md">
+            {uploadError}
+          </div>
+        )}
+
+        {!session && (
+          <div className="mb-8 p-4 bg-yellow-50 text-yellow-700 rounded-md flex items-center">
+            <LockClosedIcon className="h-5 w-5 mr-2" />
+            <span>Sign in to upload images to the gallery</span>
+          </div>
+        )}
+
+        <div className="flex justify-center mb-8">
+          {tabs.map((tab, idx) => (
+            <button
+              key={tab.label}
+              onClick={() => setActiveTab(idx)}
+              className={`px-6 py-2 mx-2 rounded-full font-semibold transition-all duration-200 shadow-sm border-2 ${
+                activeTab === idx
+                  ? "bg-blue-600 text-white border-blue-600 scale-105"
+                  : "bg-white text-blue-700 border-blue-200 hover:bg-blue-100"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {images.map((src, idx) => (
+            <div
+              key={idx}
+              className={`rounded-2xl overflow-hidden shadow-lg bg-white hover:shadow-2xl transition-all group cursor-pointer ${activeTab === 0 && idx === 0 && src === "/images/Team.jpg" ? "ring-4 ring-blue-500 ring-offset-2 shadow-2xl" : ""}`}
+              onClick={() => handleImageClick(src, idx)}
+            >
+              <div className="relative w-full h-64">
+                <Image
+                  src={src}
+                  alt={`Gallery image ${idx + 1}`}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={idx < 4}
+                />
               </div>
             </div>
-            <style jsx global>{`
-              @keyframes fade-in-modal {
-                from { opacity: 0; }
-                to { opacity: 1; }
-              }
-              .animate-fade-in-modal {
-                animation: fade-in-modal 0.3s cubic-bezier(0.4,0,0.2,1) both;
-              }
-              @keyframes scale-in {
-                from { opacity: 0; transform: scale(0.92); }
-                to { opacity: 1; transform: scale(1); }
-              }
-              .animate-scale-in {
-                animation: scale-in 0.25s cubic-bezier(0.4,0,0.2,1) both;
-              }
-            `}</style>
-          </div>
+          ))}
         </div>
-      )}
+        {modalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in-modal" onClick={() => setModalOpen(false)}>
+            <div ref={modalRef} className="relative flex flex-col items-center animate-scale-in max-w-4xl w-full" onClick={e => e.stopPropagation()} tabIndex={-1}>
+              {/* Close button floating outside */}
+              <button className="absolute -top-8 right-0 text-5xl text-blue-700 hover:text-red-500 font-extrabold bg-white/90 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl border-2 border-blue-200 transition-all focus:outline-none z-20" onClick={() => setModalOpen(false)} aria-label="Close">&times;</button>
+              <div className="bg-white/80 rounded-3xl shadow-2xl border border-blue-200 p-8 max-w-4xl w-full flex flex-col items-center">
+                {/* Left arrow */}
+                <button
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 text-5xl bg-white/90 rounded-full w-16 h-16 flex items-center justify-center shadow-xl border-2 border-blue-200 text-blue-700 hover:text-blue-900 transition-all focus:outline-none z-10 ${modalIdx === 0 ? 'opacity-30 pointer-events-none' : ''}`}
+                  onClick={showPrev}
+                  tabIndex={0}
+                  aria-label="Previous image"
+                >
+                  &#8592;
+                </button>
+                {/* Right arrow */}
+                <button
+                  className={`absolute right-0 top-1/2 -translate-y-1/2 text-5xl bg-white/90 rounded-full w-16 h-16 flex items-center justify-center shadow-xl border-2 border-blue-200 text-blue-700 hover:text-blue-900 transition-all focus:outline-none z-10 ${modalIdx === images.length - 1 ? 'opacity-30 pointer-events-none' : ''}`}
+                  onClick={showNext}
+                  tabIndex={0}
+                  aria-label="Next image"
+                >
+                  &#8594;
+                </button>
+                <div className="w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+                  <div className="relative w-full h-[65vh] max-h-[75vh] max-w-4xl mx-auto flex items-center justify-center transition-all duration-300">
+                    <Image
+                      src={modalImg!}
+                      alt={modalDesc}
+                      fill
+                      className="object-contain rounded-2xl"
+                      sizes="100vw"
+                    />
+                  </div>
+                  <div className="mt-8 text-3xl text-center text-blue-900 font-extrabold tracking-wide drop-shadow-sm px-4">{modalDesc}</div>
+                </div>
+              </div>
+              <style jsx global>{`
+                @keyframes fade-in-modal {
+                  from { opacity: 0; }
+                  to { opacity: 1; }
+                }
+                .animate-fade-in-modal {
+                  animation: fade-in-modal 0.3s cubic-bezier(0.4,0,0.2,1) both;
+                }
+                @keyframes scale-in {
+                  from { opacity: 0; transform: scale(0.92); }
+                  to { opacity: 1; transform: scale(1); }
+                }
+                .animate-scale-in {
+                  animation: scale-in 0.25s cubic-bezier(0.4,0,0.2,1) both;
+                }
+              `}</style>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

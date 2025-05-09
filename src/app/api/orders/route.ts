@@ -25,71 +25,49 @@ interface Order {
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
-    if (!user) {
-      return NextResponse.json({ orders: [] });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch both tickets and memberships
-    const [tickets, memberships] = await Promise.all([
-      prisma.ticket.findMany({
-        where: { userId: user.id },
-        include: { match: true },
-        orderBy: { purchaseDate: 'desc' },
-      }),
-      (prisma as any).membership.findMany({
-        where: { userId: user.id },
-        orderBy: { startDate: 'desc' },
-      }),
-    ]);
+    // Fetch tickets for the user, including match info and purchaseDate
+    const tickets = await prisma.ticket.findMany({
+      where: { userId: session.user.id },
+      include: {
+        match: true,
+      },
+      orderBy: { purchaseDate: 'desc' },
+    });
 
-    console.log('ORDERS API DEBUG: tickets', tickets);
-    console.log('ORDERS API DEBUG: memberships', memberships);
+    // Map to Order format
+    const orders = tickets.map(ticket => ({
+      type: 'ticket',
+      id: ticket.id,
+      date: ticket.purchaseDate,
+      details: {
+        match: ticket.match
+          ? {
+              id: ticket.match.id,
+              name: `${ticket.match.homeTeam} vs ${ticket.match.awayTeam}`,
+              date: ticket.match.date.toISOString().slice(0, 10),
+              time: ticket.match.time,
+              venue: ticket.match.venue,
+            }
+          : undefined,
+        quantity: ticket.quantity,
+        category: ticket.category,
+      },
+    }));
 
-    // Combine and format the orders
-    const orders: Order[] = [
-      ...tickets.map((ticket: Ticket & { match: Match }) => ({
-        type: 'ticket',
-        id: ticket.id,
-        date: ticket.purchaseDate,
-        details: {
-          match: {
-            id: ticket.match.id,
-            name: `${ticket.match.homeTeam} vs ${ticket.match.awayTeam}`,
-            date: ticket.match.date.toLocaleDateString(),
-            time: ticket.match.time,
-            venue: ticket.match.venue,
-          },
-          quantity: ticket.quantity,
-          category: ticket.category,
-        },
-      })),
-      ...memberships.map((membership: any) => ({
-        type: 'membership',
-        id: membership.id,
-        date: membership.startDate,
-        details: {
-          planId: membership.planId,
-          status: membership.status,
-          endDate: membership.endDate,
-        },
-      })),
-    ].sort((a, b) => b.date.getTime() - a.date.getTime());
-
-    console.log('ORDERS API DEBUG: orders', orders);
+    // TODO: Add membership orders if needed
 
     return NextResponse.json({ orders });
   } catch (error) {
-    console.error('ORDERS API ERROR:', error);
+    console.error('Failed to fetch orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   }
 } 

@@ -11,34 +11,32 @@ async function main() {
     await prisma.user.deleteMany({})
     await prisma.teamMember.deleteMany({})
 
-    // Create test accounts
-    const hashedPassword = await hash('test123', 10)
-    
-    // Create member test account
-    const memberUser = await prisma.user.create({
+    // Hash passwords
+    const adminPassword = await hash('admin123', 10)
+    const websiteUserPassword = await hash('user123', 10)
+
+    // Create admin+user account for fcadmin
+    const adminBothRoles = await prisma.user.create({
       data: {
-        email: 'member@fcescuela.com',
-        name: 'Test Member',
-        password: hashedPassword,
-        isMember: true,
-        membershipType: 'Premium',
-        memberSince: new Date(),
+        email: 'fcadmin@fcescuela.com',
+        name: 'FC Admin',
+        password: adminPassword,
+        roles: ['user', 'admin'],
       },
     })
 
-    // Create non-member test account
-    const nonMemberUser = await prisma.user.create({
+    // Create admin+user account for fc-website
+    const websiteBothRoles = await prisma.user.create({
       data: {
-        email: 'user@fcescuela.com',
-        name: 'Test User',
-        password: hashedPassword,
-        isMember: false,
+        email: 'fc-website@fcescuela.com',
+        name: 'FC Website User',
+        password: websiteUserPassword,
+        roles: ['user', 'admin'],
       },
     })
 
-    console.log('Created test accounts:')
-    console.log('Member:', memberUser.email)
-    console.log('Non-member:', nonMemberUser.email)
+    console.log('Admin+User:', adminBothRoles.email)
+    console.log('Website Admin+User:', websiteBothRoles.email)
 
     // Create sample matches
     const matches = [
@@ -99,21 +97,21 @@ async function main() {
       },
     });
 
-    // Create a past ticket for member user
+    // Create a past ticket for adminBothRoles user
     await prisma.ticket.create({
       data: {
         matchId: pastMatch.id,
-        userId: memberUser.id,
+        userId: adminBothRoles.id,
         quantity: 2,
         category: 'standard',
         purchaseDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 31), // 31 days ago
       },
     });
 
-    // Create a past (expired) membership for member user
+    // Create a past (expired) membership for adminBothRoles user
     await (prisma as any).membership.create({
       data: {
-        userId: memberUser.id,
+        userId: adminBothRoles.id,
         planId: 'premium',
         status: 'expired',
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365), // 1 year ago

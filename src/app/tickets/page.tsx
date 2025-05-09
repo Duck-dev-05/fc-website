@@ -64,7 +64,7 @@ function TicketsContent() {
 
   useEffect(() => {
     if (authStatus === 'unauthenticated' && !session) {
-      router.replace('/login');
+      router.replace('/auth/signin');
     }
   }, [authStatus, session, router]);
 

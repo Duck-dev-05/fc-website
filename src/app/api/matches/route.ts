@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCachedData, setCachedData, deleteCachedData } from '@/lib/redis';
@@ -19,11 +20,30 @@ export async function GET() {
         date: 'asc'
       }
     });
+
+    // Process matches to set status based on date and score
+    const processedMatches = matches.map(match => {
+      const matchDate = new Date(match.date);
+      const now = new Date();
+      
+      // If match has a score, it's finished
+      if (match.score) {
+        return { ...match, status: 'Finished' };
+      }
+      
+      // If match date is in the past, it's finished
+      if (matchDate < now) {
+        return { ...match, status: 'Finished' };
+      }
+      
+      // Otherwise, it's scheduled
+      return { ...match, status: 'Scheduled' };
+    });
     
     // Cache the matches data
-    await setCachedData(CACHE_KEY, matches, CACHE_TTL);
+    await setCachedData(CACHE_KEY, processedMatches, CACHE_TTL);
     
-    return NextResponse.json(matches);
+    return NextResponse.json(processedMatches);
   } catch (error) {
     console.error('Error fetching matches:', error);
     return NextResponse.json(
@@ -45,7 +65,8 @@ export async function POST(req: NextRequest) {
         time: data.time,
         venue: data.venue,
         competition: data.competition,
-        score: data.score
+        score: data.score,
+        status: data.score ? 'Finished' : 'Scheduled'
       }
     });
     

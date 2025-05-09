@@ -6,8 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
 }
 
 model Account {
@@ -59,10 +64,15 @@ model User {
   occupation    String?
   favoriteTeam  String?
   profileInitialized Boolean @default(false)
+  roles          UserRole[] @default([user])
   accounts      Account[]
   sessions      Session[]
   tickets       Ticket[]
   memberships   Membership[]
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  lastLogin       DateTime?
+  galleryImages   GalleryImage[]
 }
 
 model Match {
@@ -117,12 +127,13 @@ model News {
 }
 
 model TeamMember {
-  id      String   @id @default(cuid())
+  id      Int      @id @default(autoincrement())
   name    String
   role    String
   image   String
   bio     String
   order   Int      // For sorting
+  captain Boolean  @default(false)
 }
 
 model Membership {
@@ -135,4 +146,14 @@ model Membership {
   stripeCustomerId      String?
   stripeSubscriptionId  String?
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  filename  String
+  path      String
+  uploadedAt DateTime @default(now())
+  uploadedBy User     @relation(fields: [userId], references: [id])
+  userId    String
+  category  String   @default("general") // general, after-match, events
 } 

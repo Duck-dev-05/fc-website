@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LockClosedIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
@@ -45,7 +45,7 @@ export default function SettingsPage() {
           <h2 className="mt-4 text-xl font-bold text-gray-900">Login Required</h2>
           <p className="mt-2 text-gray-600">Please sign in to view your settings.</p>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/auth/signin')}
             className="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Sign In
@@ -143,6 +143,40 @@ export default function SettingsPage() {
               <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Member Since</div>
               <div className="text-gray-800 font-medium">{profile?.memberSince ? new Date(profile.memberSince).toLocaleDateString() : '-'}</div>
             </div>
+          </div>
+        </div>
+
+        {/* Delete Account Section */}
+        <div className="border-t pt-8 mt-8">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Danger Zone</h2>
+          <div className="bg-red-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-red-700 mb-2">Delete Account</h3>
+            <p className="text-red-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+            <button
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                  try {
+                    const response = await fetch('/api/users/delete', {
+                      method: 'DELETE',
+                    });
+                    
+                    if (response.ok) {
+                      // Sign out and redirect to home page
+                      await signOut({ redirect: false });
+                      router.push('/');
+                    } else {
+                      const data = await response.json();
+                      alert(data.error || 'Failed to delete account');
+                    }
+                  } catch (error) {
+                    alert('An error occurred while deleting your account');
+                  }
+                }
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Delete Account
+            </button>
           </div>
         </div>
       </div>

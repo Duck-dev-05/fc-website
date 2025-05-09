@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LockClosedIcon, TicketIcon, CalendarIcon, MapPinIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon, TicketIcon, CalendarIcon, MapPinIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 interface Order {
   type: 'ticket' | 'membership';
@@ -260,6 +260,10 @@ function OrdersContent() {
                         <div className="flex items-center text-sm text-gray-500">
                           <UserGroupIcon className="h-4 w-4 mr-2" />
                           {order.details.quantity} {order.details.category} ticket(s)
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <ClockIcon className="h-4 w-4 mr-2" />
+                          Purchased at: {order.date ? new Date(order.date).toLocaleString() : 'N/A'}
                         </div>
                       </div>
                     </div>

@@ -7,6 +7,7 @@ interface Profile {
   name: string;
   email: string;
   username: string;
+  image?: string;
   phone?: string;
   dob?: string;
   gender?: string;
@@ -20,14 +21,44 @@ interface Profile {
   [key: string]: string | undefined;
 }
 
+// List of countries A-Z
+const countries = [
+  "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+  "Bangladesh", "Belarus", "Belgium", "Bolivia", "Bosnia and Herzegovina", "Brazil", "Bulgaria",
+  "Cambodia", "Cameroon", "Canada", "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)",
+  "Denmark", "Dominican Republic",
+  "Ecuador", "Egypt", "El Salvador", "Estonia", "Ethiopia",
+  "Finland", "France",
+  "Georgia", "Germany", "Ghana", "Greece", "Guatemala",
+  "Haiti", "Honduras", "Hungary",
+  "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
+  "Jamaica", "Japan", "Jordan",
+  "Kazakhstan", "Kenya", "Kuwait",
+  "Laos", "Latvia", "Lebanon", "Libya", "Lithuania", "Luxembourg",
+  "Madagascar", "Malaysia", "Mexico", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (formerly Burma)",
+  "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway",
+  "Oman",
+  "Pakistan", "Panama", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+  "Qatar",
+  "Romania", "Russia", "Rwanda",
+  "Saudi Arabia", "Senegal", "Serbia", "Singapore", "Slovakia", "Slovenia", "Somalia", "South Africa", "South Korea", "Spain", "Sri Lanka", "Sudan", "Sweden", "Switzerland", "Syria",
+  "Tajikistan", "Tanzania", "Thailand", "Tunisia", "Turkey", "Turkmenistan",
+  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan",
+  "Venezuela", "Vietnam",
+  "Yemen",
+  "Zambia", "Zimbabwe"
+];
+
 export default function EditProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Determine if user is social login (Google, Facebook, etc.)
   const isSocialLogin = Boolean(session?.user?.email && session?.user?.name && session?.user?.image);
@@ -55,6 +86,18 @@ export default function EditProfilePage() {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -68,6 +111,20 @@ export default function EditProfilePage() {
         submitProfile.email = session?.user?.email || '';
         submitProfile.username = session?.user?.email?.split("@")[0] || '';
       }
+
+      // If there's a new image, upload it first
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error('Failed to upload image');
+        const { url } = await uploadRes.json();
+        submitProfile.image = url;
+      }
+
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,6 +133,8 @@ export default function EditProfilePage() {
       if (!res.ok) {
         throw new Error("Failed to update profile");
       }
+      // Refresh session so Navbar shows new image
+      await update();
       setSaving(false);
       setSuccess(true);
       setTimeout(() => router.push("/profile"), 1200);
@@ -115,9 +174,46 @@ export default function EditProfilePage() {
           </div>
         </div>
       )}
-      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-xl w-full border border-blue-100">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
         <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">Edit Profile</h1>
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Profile Image Upload */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative">
+              {imagePreview || profile?.image ? (
+                <img
+                  src={imagePreview || profile?.image}
+                  alt="Profile"
+                  className="h-32 w-32 rounded-full object-cover border-4 border-blue-200 shadow"
+                />
+              ) : (
+                <div className="h-32 w-32 rounded-full bg-gray-200 flex items-center justify-center">
+                  <svg className="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              )}
+              <label
+                htmlFor="image-upload"
+                className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors"
+                title="Change profile picture"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </label>
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Click the camera icon to change your profile picture</p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -189,7 +285,17 @@ export default function EditProfilePage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Nationality</label>
-              <input name="nationality" value={profile.nationality} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+              <select
+                name="nationality"
+                value={profile.nationality || ""}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a country</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Language</label>

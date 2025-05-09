@@ -1,5 +1,9 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { deleteCachedData } from '@/lib/redis'
+
+const CACHE_KEY = 'matches:all';
 
 // GET /api/matches/[id] - Get a specific match
 export async function GET(
@@ -20,6 +24,18 @@ export async function GET(
       )
     }
 
+    // Process match status
+    const matchDate = new Date(match.date);
+    const now = new Date();
+    
+    if (match.score) {
+      match.status = 'Finished';
+    } else if (matchDate < now) {
+      match.status = 'Finished';
+    } else {
+      match.status = 'Scheduled';
+    }
+
     return NextResponse.json(match)
   } catch (error) {
     return NextResponse.json(
@@ -36,6 +52,17 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
+    
+    // Determine status based on score and date
+    let status = body.status;
+    if (body.score) {
+      status = 'Finished';
+    } else if (new Date(body.date) < new Date()) {
+      status = 'Finished';
+    } else {
+      status = 'Scheduled';
+    }
+
     const match = await prisma.match.update({
       where: {
         id: params.id,
@@ -48,8 +75,13 @@ export async function PUT(
         venue: body.venue,
         competition: body.competition,
         score: body.score,
+        status: status,
       },
     })
+
+    // Invalidate the matches cache
+    await deleteCachedData(CACHE_KEY);
+
     return NextResponse.json(match)
   } catch (error) {
     return NextResponse.json(
@@ -70,6 +102,10 @@ export async function DELETE(
         id: params.id,
       },
     })
+
+    // Invalidate the matches cache
+    await deleteCachedData(CACHE_KEY);
+
     return NextResponse.json({ message: 'Match deleted successfully' })
   } catch (error) {
     return NextResponse.json(
