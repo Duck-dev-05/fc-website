@@ -285,7 +285,7 @@ export default function Navbar() {
                           <LifebuoyIcon className="h-5 w-5" />
                           Support
                         </Link>
-<<<<<<< HEAD
+
                         {(session?.user?.roles || []).includes('admin') && (
                           <a
                             href="http://localhost:3001/"
@@ -300,8 +300,6 @@ export default function Navbar() {
                             Admin Dashboard
                           </a>
                         )}
-=======
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
                         <div className="my-2 border-t border-blue-100" />
                         <button
                           onClick={() => { setShowAccountMenu(false); signOut(); }}
@@ -315,17 +313,12 @@ export default function Navbar() {
                     )}
                   </div>
                 ) : (
-<<<<<<< HEAD
                   <Link
                     href="/auth/signin"
-=======
-                  <button
-                    onClick={() => router.push('/auth/signin')}
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
                     className="inline-flex items-center px-8 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                   >
                     Login
-                  </button>
+                  </Link>
                 )}
               </div>
             </div>
@@ -430,7 +423,7 @@ export default function Navbar() {
                             Support
                           </div>
                         </Link>
-<<<<<<< HEAD
+
                         {(session?.user?.roles || []).includes('admin') && (
                           <a
                             href="http://localhost:3001/"
@@ -444,8 +437,6 @@ export default function Navbar() {
                             </div>
                           </a>
                         )}
-=======
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
                         <button
                           onClick={() => { setIsMenuOpen(false); signOut(); }}
                           className="w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600"

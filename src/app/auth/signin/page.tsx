@@ -5,11 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-<<<<<<< HEAD
 import { useState, Suspense, useEffect } from "react";
-=======
-import { useState, Suspense } from "react";
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 function SignInPageInner() {
@@ -47,10 +43,8 @@ function SignInPageInner() {
     });
     setLoading(false);
     if (res?.ok) {
-<<<<<<< HEAD
+    
       if (typeof window !== 'undefined') localStorage.setItem("lastLoginEmail", form.email);
-=======
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
       router.push("/");
     } else {
       setError(res?.error || "Invalid credentials");
@@ -96,12 +90,9 @@ function SignInPageInner() {
               {showPassword ? <AiOutlineEyeInvisible className="h-5 w-5" /> : <AiOutlineEye className="h-5 w-5" />}
             </button>
           </div>
-<<<<<<< HEAD
           <div className="flex justify-end mb-2">
             <a href="/auth/forgot-password" className="text-blue-600 hover:underline text-sm font-medium">Forgot your password?</a>
           </div>
-=======
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
           {errorMessage && <div className="text-red-600 text-sm text-center">{errorMessage}</div>}
           <button
             type="submit"

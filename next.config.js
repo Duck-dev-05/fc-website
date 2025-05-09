@@ -14,7 +14,7 @@ const nextConfig = {
   },
   // Ensure images are optimized
   images: {
-<<<<<<< HEAD
+
     domains: ['localhost', 'lh3.googleusercontent.com', 'graph.facebook.com'],
     unoptimized: false,
   },
@@ -27,10 +27,8 @@ const nextConfig = {
       },
       // ...other redirects
     ];
-=======
-    domains: ['localhost'],
-    unoptimized: false,
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
+
+
   },
 }
 

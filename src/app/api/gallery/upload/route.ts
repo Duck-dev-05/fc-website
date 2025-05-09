@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const filePath = join(process.cwd(), "public/images", filename);
     await writeFile(filePath, buffer);
     // Save to database
-    const image = await prisma.image.create({
+    const image = await prisma.galleryImage.create({
       data: {
         filename,
         path,

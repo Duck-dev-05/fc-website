@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-<<<<<<< HEAD
+
 import { sendMail } from '@/lib/mailer';
-=======
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
 
 const prisma = new PrismaClient();
 
@@ -30,7 +28,6 @@ export async function POST(request: Request) {
         resetTokenExpiry: expires,
       },
     });
-<<<<<<< HEAD
     const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
 
     // Use the mailer utility
@@ -44,7 +41,7 @@ export async function POST(request: Request) {
           <p>We received a request to reset your password for your FC ESCUELA account. Click the button below to set a new password:</p>
           <div style="text-align: center; margin: 24px 0;">
             <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: #fff; border-radius: 4px; text-decoration: none; font-weight: bold;">Reset Password</a>
-          </div>
+          </div>      
           <p>If you did not request this, you can safely ignore this email.</p>
           <p style="color: #64748b; font-size: 13px;">This link will expire in 1 hour.</p>
           <p style="margin-top: 32px; color: #64748b; font-size: 13px;">Thanks,<br/>FC ESCUELA Team</p>
@@ -52,11 +49,8 @@ export async function POST(request: Request) {
       `,
     });
 
-=======
-    // TODO: Send email with link
-    const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
-    console.log('Reset link:', resetLink);
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
+    return NextResponse.json({ message: 'If this email exists, a reset link has been sent.' });
+
     return NextResponse.json({ message: 'If this email exists, a reset link has been sent.' });
   } catch (error: any) {
     console.error('Forgot password error:', error);
