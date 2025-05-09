@@ -64,22 +64,21 @@ model User {
   occupation    String?
   favoriteTeam  String?
   profileInitialized Boolean @default(false)
-<<<<<<< HEAD
+
   roles          UserRole[] @default([user])
 =======
   role           UserRole? @default(user)
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
+
   accounts      Account[]
   sessions      Session[]
   tickets       Ticket[]
   memberships   Membership[]
   resetToken        String?
   resetTokenExpiry  DateTime?
-<<<<<<< HEAD
+
   lastLogin       DateTime?
   galleryImages   GalleryImage[]
-=======
->>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
+
 }
 
 model Match {
