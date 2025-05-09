@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+<<<<<<< HEAD
 import { sendMail } from '@/lib/mailer';
+=======
+>>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
 
 export async function POST(request: Request) {
   try {
@@ -33,6 +36,7 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+<<<<<<< HEAD
         roles: ['user'],
         profileInitialized: false,
         username: finalUsername,
@@ -47,6 +51,14 @@ export async function POST(request: Request) {
       html: `<h2>Welcome, ${name}!</h2><p>Your account has been created successfully at FC ESCUELA.</p><p>Thank you for joining us!</p>`
     });
 
+=======
+        role: 'user',
+        profileInitialized: false,
+        username: finalUsername,
+      },
+    });
+
+>>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
     return NextResponse.json({ message: 'Registration successful' }, { status: 201 });
   } catch (error: any) {
     console.error('Registration error:', error);

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+<<<<<<< HEAD
 import { sendMail } from '@/lib/mailer';
+=======
+>>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
 
 const prisma = new PrismaClient();
 
@@ -27,6 +30,7 @@ export async function POST(request: Request) {
         resetTokenExpiry: expires,
       },
     });
+<<<<<<< HEAD
     const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
 
     // Use the mailer utility
@@ -48,6 +52,11 @@ export async function POST(request: Request) {
       `,
     });
 
+=======
+    // TODO: Send email with link
+    const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
+    console.log('Reset link:', resetLink);
+>>>>>>> dc88bcb52c9f7dacba2cf72bf175ed0ac14d1845
     return NextResponse.json({ message: 'If this email exists, a reset link has been sent.' });
   } catch (error: any) {
     console.error('Forgot password error:', error);
