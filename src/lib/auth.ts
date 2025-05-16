@@ -122,6 +122,8 @@ export const authOptions: NextAuthOptions = {
           scope: 'email,public_profile'
         }
       },
+      // Set the callback URL in the Facebook Developer Console to:
+      // https://<your-domain>/api/auth/callback/facebook
       profile(profile: FacebookProfile) {
         return {
           id: profile.id,
