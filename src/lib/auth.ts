@@ -39,8 +39,13 @@ const prisma = new PrismaClient()
 // Example: `/auth/error?error=${encodeURIComponent(error.message || error)}`
 // Never pass raw error objects or stack traces in URLs or headers.
 
-function encodeErrorForUrl(error) {
-  return encodeURIComponent(error?.message || error?.toString?.() || String(error));
+function encodeErrorForUrl(error: unknown) {
+  // Handles Error objects, strings, and other thrown values
+  return encodeURIComponent(
+    (typeof error === 'object' && error && 'message' in error)
+      ? (error as { message?: string }).message ?? String(error)
+      : String(error)
+  );
 }
 
 export const authOptions: NextAuthOptions = {
