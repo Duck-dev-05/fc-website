@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  MEMBER
+  VIP_MEMBER
+  ADMIN
+}
+
+enum MembershipStatus {
+  NONE
+  BASIC
+  PREMIUM
+  VIP
+}
+
+model User {
+  id            String           @id @default(cuid())
+  name          String?
+  email         String?          @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole         @default(USER)
+  membershipStatus MembershipStatus @default(NONE)
+  membershipExpiry DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  tickets       Ticket[]
+  memberships   Membership[]
+}
+
+model Match {
+  id              String   @id @default(cuid())
+  homeTeam        String
+  awayTeam        String
+  date            DateTime
+  time            String
+  venue           String
+  competition     String
+  score           String?
+  referee         String?
+  attendance      Int?
+  weather         String?
+  description     String?
+  manOfTheMatch   String?
+  stadiumCapacity Int?
+  tvBroadcast     String?
+  status          String?
+  goalScorers     String?
+  cards           String?
+  notes           String?
+  homeLineup      String?
+  awayLineup      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tickets         Ticket[]
+}
+
+model Ticket {
+  id           String   @id @default(cuid())
+  match        Match    @relation(fields: [matchId], references: [id])
+  matchId      String
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  quantity     Int
+  category     String
+  purchaseDate DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Membership {
+  id              String   @id @default(cuid())
+  userId          String
+  planId          String
+  status          String   @default("active")
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+} 

@@ -1,0 +1,63 @@
+{
+  "name": "fcwebsite-fe",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:seed": "prisma db seed",
+    "seed": "tsx prisma/seed.ts",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "generate-nextauth-secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
+    "migrate:deploy": "prisma migrate deploy"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.9.0",
+    "@headlessui/react": "^2.2.2",
+    "@heroicons/react": "^2.1.1",
+    "@neondatabase/serverless": "^1.0.0",
+    "@prisma/client": "^5.7.1",
+    "@stripe/stripe-js": "^7.2.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/ioredis": "^4.28.10",
+    "autoprefixer": "^10.0.1",
+    "axios": "^1.9.0",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "date-fns": "^4.1.0",
+    "dgram": "^1.0.1",
+    "dns": "^0.1.2",
+    "ioredis": "^5.6.1",
+    "net": "^1.0.2",
+    "next": "^14.2.28",
+    "next-auth": "^4.24.5",
+    "nodemailer": "^6.10.1",
+    "postcss": "^8",
+    "prisma": "^5.7.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-hot-toast": "^2.4.1",
+    "react-icons": "^5.0.1",
+    "stripe": "^18.1.0",
+    "tailwindcss": "^3.3.0",
+    "tls": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/node": "^20",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5"
+  }
+}
