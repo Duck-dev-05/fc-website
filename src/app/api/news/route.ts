@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import { getCachedData, setCachedData, deleteCachedData } from '@/lib/redis';
 
+const prisma = new PrismaClient();
 const CACHE_KEY = 'news:all';
 
 export async function GET() {
@@ -33,27 +34,28 @@ export async function GET() {
   }
 }
 
-// Add POST handler for creating news
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const news = await prisma.news.create({
+    const article = await prisma.news.create({
       data: {
         title: body.title,
         content: body.content,
         imageUrl: body.imageUrl,
+        author: body.author,
+        category: body.category
       },
     });
 
     // Invalidate the cache when new article is added
     await deleteCachedData(CACHE_KEY);
 
-    return NextResponse.json(news);
+    return NextResponse.json(article, { status: 201 });
   } catch (error) {
-    console.error('Error creating news:', error);
+    console.error('Failed to create news:', error);
     return NextResponse.json(
-      { error: 'Failed to create news' },
+      { error: 'Failed to create news article' },
       { status: 500 }
     );
   }
-} 
+}
