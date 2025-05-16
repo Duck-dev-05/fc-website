@@ -35,6 +35,14 @@ declare module 'next-auth' {
 
 const prisma = new PrismaClient()
 
+// Utility: Always encode error messages in URLs/headers
+// Example: `/auth/error?error=${encodeURIComponent(error.message || error)}`
+// Never pass raw error objects or stack traces in URLs or headers.
+
+function encodeErrorForUrl(error) {
+  return encodeURIComponent(error?.message || error?.toString?.() || String(error));
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
@@ -156,10 +164,13 @@ export const authOptions: NextAuthOptions = {
       console.log('signIn callback', { user, account, profile });
       // Update lastLogin for all providers
       if (user?.email) {
-        await prisma.user.update({
-          where: { email: user.email },
-          data: { lastLogin: new Date() },
-        });
+        const existingUser = await prisma.user.findUnique({ where: { email: user.email } });
+        if (existingUser) {
+          await prisma.user.update({
+            where: { email: user.email },
+            data: { lastLogin: new Date() },
+          });
+        }
       }
 
       if (account?.provider === 'google' || account?.provider === 'facebook') {

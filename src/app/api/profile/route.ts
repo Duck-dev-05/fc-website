@@ -12,6 +12,11 @@ export async function POST(req: NextRequest) {
   }
   const data = await req.json();
   try {
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+    if (!existingUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
       data: {

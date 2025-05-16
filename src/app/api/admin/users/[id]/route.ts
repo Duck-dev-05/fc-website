@@ -6,6 +6,11 @@ const prisma = new PrismaClient();
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { name, email, roles } = await req.json();
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({ where: { id: params.id } });
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
     const user = await prisma.user.update({
       where: { id: params.id },
       data: { name, email, roles },
