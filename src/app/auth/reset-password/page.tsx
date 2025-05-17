@@ -46,7 +46,21 @@ function ResetPasswordPageInner() {
             disabled={loading}
           />
           {success && <div className="text-green-600 text-sm text-center">{success}</div>}
-          {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+          {error && (
+            <div className="text-red-600 text-sm text-center">
+              {error}
+              {error === "Invalid or expired token" && (
+                <div className="mt-4 text-center">
+                  <a
+                    href="/auth/forgot-password"
+                    className="inline-block bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-200 transition mt-2"
+                  >
+                    Request New Reset Link
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading}
