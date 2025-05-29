@@ -10,7 +10,7 @@ import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIc
 const navigation = [
   { name: 'About Us', href: '/about' },
   { name: 'Matches', href: '/matches' },
-  { name: 'Tickets', href: '/tickets' },
+  { name: 'Recent Matches', href: '/tickets' },
   { name: 'News', href: '/news' },
   { name: 'Team', href: '/team' },
   { name: 'Gallery', href: '/gallery' },
@@ -80,7 +80,7 @@ export default function Navbar() {
   const recommendedLinks = [
     { name: 'About Us', href: '/about' },
     { name: 'Matches', href: '/matches' },
-    { name: 'Tickets', href: '/tickets' },
+    { name: 'Recent Matches', href: '/tickets' },
     { name: 'News', href: '/news' },
     { name: 'Team', href: '/team' },
     { name: 'Gallery', href: '/gallery' },

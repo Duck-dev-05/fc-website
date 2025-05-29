@@ -63,8 +63,8 @@ export default function Home() {
             <Link href="/matches" className="btn-primary">
               View Matches
             </Link>
-            <Link href="/tickets" className="btn-secondary">
-              Buy Tickets
+            <Link href="/matches" className="btn-secondary">
+              Recent Matches
             </Link>
           </div>
         </div>
@@ -101,10 +101,10 @@ export default function Home() {
                   </div>
                   
                   <Link
-                    href={`/tickets?match=${nextMatch.id}`}
+                    href={`/matches/${nextMatch.id}`}
                     className="btn-primary mt-6 md:mt-0"
                   >
-                    Get Tickets
+                    View Details
                   </Link>
                 </div>
               </div>

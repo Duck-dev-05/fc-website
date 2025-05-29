@@ -7,7 +7,7 @@ import { useEffect, useState, Suspense } from "react";
 const pages = [
   { name: "About Us", href: "/about", description: "Learn more about FC ESCUELA, our mission, and our story." },
   { name: "Matches", href: "/matches", description: "View upcoming and past matches, scores, and match details." },
-  { name: "Tickets", href: "/tickets", description: "Purchase tickets for upcoming matches and events." },
+  { name: "Recent Matches", href: "/tickets", description: "View our most recent matches and their results." },
   { name: "News", href: "/news", description: "Read the latest news and updates about FC ESCUELA." },
   { name: "Team", href: "/team", description: "Meet our players, coaches, and staff." },
   { name: "Gallery", href: "/gallery", description: "Browse photos and videos from matches and events." },
