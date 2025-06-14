@@ -192,28 +192,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-export async function TEST() {
-  try {
-    // Test Redis connection
-    await redis.set('test', 'Hello Redis!');
-    const value = await redis.get('test');
-    
-    return NextResponse.json({
-      status: 'success',
-      message: 'Redis connection successful',
-      testValue: value
-    });
-  } catch (error) {
-    console.error('Redis test error:', error);
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: 'Redis connection failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
 } 
