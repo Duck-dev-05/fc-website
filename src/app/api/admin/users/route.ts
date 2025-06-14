@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.roles || !session.user.roles.includes('admin')) {
+    return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 });
+  }
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -22,6 +28,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.roles || !session.user.roles.includes('admin')) {
+    return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 });
+  }
   try {
     const { name, email, roles } = await req.json();
     const user = await prisma.user.create({

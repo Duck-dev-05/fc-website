@@ -12,27 +12,39 @@ export async function POST(req: NextRequest) {
   }
   const data = await req.json();
   try {
+    // Only allow if admin or user is updating their own profile
+    if (!session.user?.roles?.includes('admin') && session.user.email !== data.email) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
     if (!existingUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     const updatedUser = await prisma.user.update({
-      where: { email: session.user.email },
-      data: {
-        name: data.name,
-        username: data.username,
-        image: data.image,
-        phone: data.phone,
-        dob: data.dob,
-        address: data.address,
-        gender: data.gender,
-        nationality: data.nationality,
-        language: data.language,
-        bio: data.bio,
-        website: data.website,
-        occupation: data.occupation,
-        favoriteTeam: data.favoriteTeam,
+      where: { email: data.email },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        username: true,
+        phone: true,
+        dob: true,
+        address: true,
+        gender: true,
+        nationality: true,
+        language: true,
+        bio: true,
+        website: true,
+        occupation: true,
+        favoriteTeam: true,
+        isMember: true,
+        membershipType: true,
+        memberSince: true,
+        emailVerified: true,
+        roles: true,
       },
     });
     return NextResponse.json({ user: updatedUser });
@@ -69,10 +81,15 @@ export async function GET(req: NextRequest) {
         membershipType: true,
         memberSince: true,
         emailVerified: true,
+        roles: true,
       },
     });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    // Only allow if admin or user is accessing their own profile
+    if (!session.user?.roles?.includes('admin') && session.user.email !== user.email) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     return NextResponse.json({ user });
   } catch (error) {

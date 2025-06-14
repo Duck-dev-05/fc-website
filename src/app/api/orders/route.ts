@@ -28,12 +28,16 @@ interface Order {
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // Only allow if admin or user is accessing their own orders
+  if (!session.user?.roles?.includes('admin')) {
+    // Only allow access to their own orders
+    // (Assume userId is always session.user.id for non-admins)
+  }
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Fetch tickets for the user, including match info and purchaseDate
     const tickets = await prisma.ticket.findMany({
       where: { userId: session.user.id },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCachedData, setCachedData, deleteCachedData } from '@/lib/redis';
 import { prisma } from '@/lib/prisma';
+import redis from '@/lib/redis';
 
 const MATCHES_CACHE_KEY = 'test:matches';
 const TICKETS_CACHE_KEY = 'test:tickets';
@@ -187,6 +188,30 @@ export async function POST(req: NextRequest) {
       { 
         error: 'Failed to clear cache',
         details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function TEST() {
+  try {
+    // Test Redis connection
+    await redis.set('test', 'Hello Redis!');
+    const value = await redis.get('test');
+    
+    return NextResponse.json({
+      status: 'success',
+      message: 'Redis connection successful',
+      testValue: value
+    });
+  } catch (error) {
+    console.error('Redis test error:', error);
+    return NextResponse.json(
+      {
+        status: 'error',
+        message: 'Redis connection failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

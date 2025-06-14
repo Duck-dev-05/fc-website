@@ -10,7 +10,10 @@ export async function DELETE(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
+  // Only allow if admin or user is deleting their own account
+  if (!session.user?.roles?.includes('admin') && !session.user?.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     await prisma.user.delete({ where: { id: session.user.id } });
     return NextResponse.json({ success: true });
