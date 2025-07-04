@@ -84,9 +84,10 @@ const AccountMenu = () => {
   return (
     <Link
       href="/auth/signin"
-      className="px-6 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+      className="px-7 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-all text-base font-semibold whitespace-nowrap shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300"
+      style={{whiteSpace: 'nowrap'}}
     >
-      Sign In
+      <span className="whitespace-nowrap">Sign In</span>
     </Link>
   );
 };

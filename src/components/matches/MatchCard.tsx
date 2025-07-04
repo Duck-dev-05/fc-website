@@ -24,13 +24,14 @@ export default function MatchCard({ match }: MatchCardProps) {
         className={`absolute top-6 right-6 px-4 py-1.5 rounded-full text-sm font-bold shadow-md transition-colors
           ${match.status === 'Cancelled' ? 'bg-red-100 text-red-700 hover:bg-red-200' :
             match.status === 'Finished' ? 'bg-green-100 text-green-700 hover:bg-green-200' :
+            match.status === 'Upcoming' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' :
             'bg-blue-100 text-blue-700 hover:bg-blue-200'}
         `}
         style={{ letterSpacing: '0.03em' }}
-        title={match.status === 'Cancelled' ? 'Status: Cancelled' : match.status === 'Finished' ? 'Status: Finished' : 'Status: Scheduled'}
-        aria-label={match.status === 'Cancelled' ? 'Status: Cancelled' : match.status === 'Finished' ? 'Status: Finished' : 'Status: Scheduled'}
+        title={`Status: ${match.status}`}
+        aria-label={`Status: ${match.status}`}
       >
-        {match.status === 'Cancelled' ? 'Cancelled' : match.status === 'Finished' ? 'Finished' : 'Scheduled'}
+        {match.status}
       </Link>
       <div className="flex flex-col space-y-6">
         <div className="text-center">

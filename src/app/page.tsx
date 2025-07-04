@@ -8,24 +8,24 @@ import Image from 'next/image'
 export default function Home() {
   const [nextMatch, setNextMatch] = useState<Match | null>(null)
   const [loading, setLoading] = useState(true)
-  const [news, setNews] = useState<any[]>([])
   const [teamStats, setTeamStats] = useState<any>(null)
+  const [recentMatches, setRecentMatches] = useState<Match[]>([])
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch next match
+        // Fetch all matches
         const matchResponse = await matchApi.getAll()
-        const upcomingMatches = matchResponse.data
-          .filter((match: Match) => new Date(match.date) > new Date())
-          .sort((a: Match, b: Match) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        
-        setNextMatch(upcomingMatches[0] || null)
+        // Find all upcoming matches (status 'Upcoming')
+        const upcoming = matchResponse.data.filter((match: Match) => match.status === 'Upcoming')
+        setUpcomingMatches(upcoming)
 
-        // Fetch latest news
-        const newsResponse = await fetch('/api/news')
-        const newsData = await newsResponse.json()
-        setNews(newsData.slice(0, 3)) // Get latest 3 news items
+        // Fetch recent finished matches (with score, sorted by date desc)
+        const finishedMatches = matchResponse.data
+          .filter((match: Match) => match.score && new Date(match.date) < new Date())
+          .sort((a: Match, b: Match) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        setRecentMatches(finishedMatches.slice(0, 3))
 
         // Mock team stats (replace with actual API call)
         setTeamStats({
@@ -43,161 +43,147 @@ export default function Home() {
         setLoading(false)
       }
     }
-
     fetchData()
   }, [])
 
   return (
-    <main className="min-h-screen bg-white">
-      {/* Hero Section with Video Background */}
-      <section className="relative h-[80vh] overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src="/videos/hero.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white px-4">
-          <h1 className="text-7xl md:text-9xl font-bold mb-8 text-center">
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-100">
+      {/* Hero Section with Team Photo Background */}
+      <section className="relative h-[80vh] overflow-hidden flex items-center justify-center">
+        <Image
+          src="/images/Team.jpg"
+          alt="Team photo background"
+          fill
+          priority
+          className="absolute inset-0 w-full h-full object-cover brightness-75"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+        <div className="relative z-10 flex flex-col justify-center items-center text-white px-4 animate-fade-in-up">
+          <h1 className="text-5xl md:text-8xl font-extrabold mb-6 text-center drop-shadow-lg tracking-tight">
             FC ESCUELA
           </h1>
-          <p className="text-xl md:text-2xl max-w-2xl text-center mb-12">
-            More than a club - a community united by passion for football
+          <p className="text-lg md:text-2xl max-w-2xl text-center mb-10 font-light drop-shadow">
+            More than a club – a community united by passion for football
           </p>
-          <div className="flex gap-4">
-            <Link href="/matches" className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg font-medium transition-colors">
+          <div className="flex gap-4 flex-wrap justify-center">
+            <Link href="/matches" className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-full font-semibold shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300">
               View Matches
             </Link>
-            <Link href="/tickets" className="border border-white hover:bg-white/10 px-8 py-3 rounded-lg font-medium transition-colors">
+            <Link href="/tickets" className="border border-white hover:bg-white/10 px-8 py-3 rounded-full font-semibold shadow-lg transition-all duration-200 text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
               Buy Tickets
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Latest News Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl font-bold">Latest News</h2>
-            <Link href="/news" className="text-blue-600 hover:text-blue-700 font-medium">
-              View All News →
-            </Link>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {news.map((article) => (
-              <Link key={article.id} href={`/news/${article.id}`} className="group">
-                <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
-                  <div className="aspect-w-16 aspect-h-9 relative">
-                    <Image
-                      src={article.imageUrl || '/images/default-news.jpg'}
-                      alt={article.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 transition-colors">
-                      {article.title}
-                    </h3>
-                    <p className="text-gray-600 line-clamp-2">{article.content}</p>
-                    <div className="mt-4 flex items-center text-sm text-gray-500">
-                      <span>{new Date(article.date).toLocaleDateString()}</span>
-                      <span className="mx-2">•</span>
-                      <span>{article.category}</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Next Match Section */}
-      <section className="py-20">
+      <section className="py-20 animate-fade-in-up">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12">Next Match</h2>
-          
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-blue-800 tracking-tight">Upcoming Matches</h2>
           {loading ? (
             <div className="flex justify-center">
               <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
             </div>
-          ) : nextMatch ? (
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="p-8">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                  <div className="text-center md:text-left">
-                    <h3 className="text-2xl font-bold mb-2">{nextMatch.competition}</h3>
-                    <p className="text-gray-600">
-                      {new Date(nextMatch.date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric', 
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                    <p className="text-gray-600">{nextMatch.venue}</p>
-                  </div>
-
-                  <div className="flex items-center gap-8">
-                    <div className="text-center">
-                      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-                        <span className="text-2xl font-bold">{nextMatch.homeTeam.charAt(0)}</span>
+          ) : upcomingMatches.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {upcomingMatches.map((match) => (
+                <div key={match.id} className="bg-white rounded-2xl shadow-xl overflow-hidden border border-blue-100 transition-shadow duration-300 hover:shadow-2xl">
+                  <div className="p-8 flex flex-col gap-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                      <div className="text-center md:text-left">
+                        <h3 className="text-2xl font-bold mb-2 text-blue-700">{match.competition}</h3>
+                        <p className="text-gray-600">
+                          {new Date(match.date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        <p className="text-gray-500">{match.venue}</p>
                       </div>
-                      <p className="font-medium">{nextMatch.homeTeam}</p>
-                    </div>
-
-                    <span className="text-3xl font-bold">vs</span>
-
-                    <div className="text-center">
-                      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-                        <span className="text-2xl font-bold">{nextMatch.awayTeam.charAt(0)}</span>
+                      <div className="flex items-center gap-8">
+                        <div className="text-center">
+                          <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-2 border-2 border-blue-300">
+                            <span className="text-2xl font-bold text-blue-700">{match.homeTeam.charAt(0)}</span>
+                          </div>
+                          <p className="font-medium text-blue-700">{match.homeTeam}</p>
+                        </div>
+                        <span className="text-3xl font-bold text-gray-400">vs</span>
+                        <div className="text-center">
+                          <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-2 border-2 border-blue-300">
+                            <span className="text-2xl font-bold text-blue-700">{match.awayTeam.charAt(0)}</span>
+                          </div>
+                          <p className="font-medium text-blue-700">{match.awayTeam}</p>
+                        </div>
                       </div>
-                      <p className="font-medium">{nextMatch.awayTeam}</p>
+                      <Link
+                        href={`/matches/${match.id}`}
+                        className="bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition-colors font-semibold shadow-lg"
+                      >
+                        Match Details
+                      </Link>
                     </div>
                   </div>
-
-                  <Link
-                    href={`/matches/${nextMatch.id}`}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Match Details
-                  </Link>
                 </div>
-              </div>
+              ))}
             </div>
           ) : (
-            <p className="text-center text-gray-600">No upcoming matches scheduled</p>
+            <p className="text-center text-gray-500">No upcoming matches scheduled</p>
           )}
         </div>
       </section>
 
-      {/* Team Stats Section */}
+      {/* Recent Matches Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12">Season Stats</h2>
-          
+          <div className="flex justify-between items-center mb-12">
+            <h2 className="text-3xl font-bold">Recent Matches</h2>
+            <Link href="/recent-matches" className="text-blue-600 hover:text-blue-700 font-medium">
+              View All Recent Matches →
+            </Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {recentMatches.length === 0 ? (
+              <p className="text-gray-500 col-span-3">No recent matches to display.</p>
+            ) : (
+              recentMatches.map((match) => (
+                <Link key={match.id} href={`/recent-matches/${match.id}`} className="group bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-6 flex flex-col items-center">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-bold text-blue-900 text-lg">{match.homeTeam}</span>
+                    <span className="mx-1 text-gray-400 font-bold">vs</span>
+                    <span className="font-bold text-blue-900 text-lg">{match.awayTeam}</span>
+                  </div>
+                  <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-2">{match.competition}</span>
+                  <span className="text-gray-500 text-sm mb-2">{match.venue}</span>
+                  <span className="text-2xl font-bold text-green-700 bg-green-50 px-4 py-1 rounded-lg shadow-inner mb-2">{match.score}</span>
+                  <span className="text-gray-400 text-xs">{new Date(match.date).toLocaleDateString()}</span>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Stats Section */}
+      <section className="py-20 bg-gradient-to-b from-blue-50 via-white to-gray-50 animate-fade-in-up">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-blue-800 tracking-tight">Season Stats</h2>
           {teamStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="bg-white p-6 rounded-xl shadow-md border border-blue-100 flex flex-col items-center">
                 <h3 className="text-lg font-medium text-gray-600 mb-2">Matches Played</h3>
                 <p className="text-3xl font-bold text-blue-600">{teamStats.played}</p>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="bg-white p-6 rounded-xl shadow-md border border-blue-100 flex flex-col items-center">
                 <h3 className="text-lg font-medium text-gray-600 mb-2">Goals Scored</h3>
                 <p className="text-3xl font-bold text-blue-600">{teamStats.goalsFor}</p>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="bg-white p-6 rounded-xl shadow-md border border-blue-100 flex flex-col items-center">
                 <h3 className="text-lg font-medium text-gray-600 mb-2">Goals Against</h3>
                 <p className="text-3xl font-bold text-blue-600">{teamStats.goalsAgainst}</p>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="bg-white p-6 rounded-xl shadow-md border border-blue-100 flex flex-col items-center">
                 <h3 className="text-lg font-medium text-gray-600 mb-2">Points</h3>
                 <p className="text-3xl font-bold text-blue-600">{teamStats.points}</p>
               </div>

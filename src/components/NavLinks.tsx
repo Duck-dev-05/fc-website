@@ -24,15 +24,16 @@ const NavLinks = ({ onClick }: { onClick?: () => void }) => {
         <Link
           key={item.name}
           href={item.href}
-          className={`inline-flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+          className={`inline-flex items-center space-x-2 px-4 py-2 text-base font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 whitespace-nowrap border-b-2 ${
             pathname === item.href
-              ? 'text-blue-600 bg-blue-50'
-              : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              ? 'text-blue-700 border-blue-600 bg-blue-50 shadow-sm'
+              : 'text-gray-700 border-transparent hover:text-blue-600 hover:bg-blue-50 hover:border-blue-400'
           }`}
           onClick={onClick}
+          style={{whiteSpace: 'nowrap'}}
         >
           <item.icon className="h-5 w-5" />
-          <span>{item.name}</span>
+          <span className="whitespace-nowrap">{item.name}</span>
         </Link>
       ))}
     </>
