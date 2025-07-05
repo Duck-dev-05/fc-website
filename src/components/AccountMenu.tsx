@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { ArrowRightOnRectangleIcon, UserCircleIcon, ShoppingBagIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, UserCircleIcon, PhotoIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 const AccountMenu = () => {
   const { data: session } = useSession();
@@ -53,12 +53,12 @@ const AccountMenu = () => {
               <span>Profile</span>
             </Link>
             <Link
-              href="/orders"
+              href="/gallery#my-uploads"
               className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
               onClick={() => setShowAccountMenu(false)}
             >
-              <ShoppingBagIcon className="h-5 w-5" />
-              <span>My Orders</span>
+              <PhotoIcon className="h-5 w-5" />
+              <span>My Uploads</span>
             </Link>
             <Link
               href="/settings"

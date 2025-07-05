@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { FaUserShield, FaStar } from 'react-icons/fa'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 
 interface TeamMember {
   id: string;
@@ -13,12 +11,23 @@ interface TeamMember {
   captain: boolean;
 }
 
+// Role badge color map
+const ROLE_COLORS: Record<string, string> = {
+  GK: 'bg-red-100 text-red-700 border-red-300',
+  CB: 'bg-blue-100 text-blue-700 border-blue-300',
+  LB: 'bg-blue-50 text-blue-600 border-blue-200',
+  RB: 'bg-blue-50 text-blue-600 border-blue-200',
+  CDM: 'bg-purple-100 text-purple-700 border-purple-300',
+  AMF: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+  LW: 'bg-green-100 text-green-700 border-green-300',
+  RW: 'bg-green-100 text-green-700 border-green-300',
+  CF: 'bg-orange-100 text-orange-700 border-orange-300',
+};
+
 export default function TeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { data: session, status } = useSession();
-  const router = useRouter();
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -36,32 +45,6 @@ export default function TeamPage() {
     }
     fetchTeam()
   }, [])
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200 animate-gradient-x">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600">Loading team members...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200 animate-gradient-x">
-        <h2 className="text-2xl font-bold mb-4">Login Required</h2>
-        <p className="mb-4">You must be logged in to view the team page.</p>
-        <button
-          onClick={() => router.push('/auth/signin')}
-          className="px-6 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-all"
-        >
-          Go to Login
-        </button>
-      </div>
-    )
-  }
 
   if (error) {
     return (
@@ -88,6 +71,11 @@ export default function TeamPage() {
     return a.name.localeCompare(b.name);
   });
 
+  // Helper: get initials
+  function getInitials(name: string) {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
   return (
     <div className="min-h-[80vh] w-full flex flex-col items-center justify-center py-12 px-2 bg-gradient-to-br from-blue-100 via-white to-blue-200 animate-gradient-x">
       <div className="mb-10 text-center">
@@ -97,8 +85,8 @@ export default function TeamPage() {
       <ul className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {sortedMembers.map((member, idx) => (
           <li
-            key={member.id}
-            className="flex flex-col items-center bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-blue-100 transition-transform hover:scale-[1.03] hover:shadow-2xl group animate-fade-in relative"
+            key={member.id || member.name}
+            className={`flex flex-col items-center bg-white/70 backdrop-blur-md rounded-2xl shadow-xl p-7 border-2 transition-transform hover:scale-[1.04] hover:shadow-2xl group animate-fade-in relative ${member.captain ? 'border-yellow-400' : 'border-blue-100'}`}
             style={{ animationDelay: `${idx * 60}ms` }}
           >
             {member.captain && (
@@ -106,20 +94,23 @@ export default function TeamPage() {
                 <FaStar className="text-white drop-shadow" /> Captain
               </span>
             )}
-            <div className="flex-shrink-0">
-              <img
-                src={member.image ? `/avatars/${member.image}` : '/default-player.png'}
-                alt={member.name}
-                className="w-24 h-24 rounded-full object-cover border-4 border-blue-300 shadow-lg bg-white group-hover:scale-105 transition-transform duration-200"
-                onError={e => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = 'data:image/svg+xml;utf8,<svg width=\'96\' height=\'96\' xmlns=\'http://www.w3.org/2000/svg\'><rect width=\'100%\' height=\'100%\' fill=\'%23e0e7ef\'/><text x=\'50%\' y=\'54%\' font-size=\'32\' text-anchor=\'middle\' fill=\'%236b7280\' dy=\'.3em\'>👤</text></svg>';
-                }}
-              />
+            <div className="flex-shrink-0 mb-3">
+              {member.image ? (
+                <img
+                  src={`/avatars/${member.image}`}
+                  alt={member.name}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-blue-300 shadow-lg bg-white group-hover:scale-105 transition-transform duration-200"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform duration-200"
+                  style={{ background: member.captain ? 'linear-gradient(135deg, #facc15 60%, #fde68a 100%)' : '#60a5fa' }}>
+                  {getInitials(member.name)}
+                </div>
+              )}
             </div>
-            <div className="flex flex-col items-center justify-center flex-1 min-w-0 mt-4">
+            <div className="flex flex-col items-center justify-center flex-1 min-w-0 mt-2">
               <span className="text-2xl font-bold text-gray-900 truncate drop-shadow-sm text-center">{member.name}</span>
-              <span className="inline-flex items-center gap-2 mt-3 px-4 py-1 text-base font-semibold bg-blue-200/70 text-blue-900 rounded-full w-fit shadow border border-blue-300">
+              <span className={`inline-flex items-center gap-2 mt-3 px-4 py-1 text-base font-semibold rounded-full w-fit shadow border ${ROLE_COLORS[member.role.toUpperCase()] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
                 <FaUserShield className="text-blue-500" />
                 {member.role}
               </span>

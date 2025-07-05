@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
-import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon, TicketIcon, TrophyIcon, NewspaperIcon, UserGroupIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, ShoppingBagIcon, LifebuoyIcon, TicketIcon, TrophyIcon, NewspaperIcon, UserGroupIcon, PhotoIcon, HomeIcon, UsersIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 import NavLinks from './NavLinks'
 import SearchBar from './SearchBar'
 import AccountMenu from './AccountMenu'
@@ -20,6 +20,51 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+// Navigation links config
+const NAV_LINKS = [
+  { href: '/team', label: 'First Team', icon: UsersIcon, match: (pathname: string) => pathname.startsWith('/team') },
+  { href: '/matches', label: 'Matches', icon: CalendarDaysIcon, match: (pathname: string) => pathname.startsWith('/matches') },
+  { href: '/recent-matches', label: 'Recent Matches', icon: TrophyIcon, match: (pathname: string) => pathname.startsWith('/recent-matches') },
+  { href: '/gallery', label: 'Gallery', icon: PhotoIcon, match: (pathname: string) => pathname.startsWith('/gallery') },
+];
+
+function NavLinksList({ pathname }: { pathname: string }) {
+  return (
+    <>
+      {NAV_LINKS.map(({ href, label, icon: Icon, match }) => (
+        <Link
+          key={href}
+          href={href}
+          aria-current={match(pathname) ? 'page' : undefined}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+            match(pathname)
+              ? 'bg-blue-100 text-blue-700'
+              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+          }`}
+        >
+          <Icon className="h-5 w-5" />{label}
+        </Link>
+      ))}
+    </>
+  );
+}
+
+function MobileNavLinksList() {
+  return (
+    <>
+      {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-base transition-colors text-gray-700 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        >
+          <Icon className="h-5 w-5" />{label}
+        </Link>
+      ))}
+    </>
+  );
+}
+
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { data: session, status } = useSession();
@@ -29,7 +74,6 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const pathname = usePathname()
   const menuRef = useRef<HTMLDivElement>(null);
-  const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false)
   const router = useRouter();
 
   const debouncedSearch = useDebounce(search, 300);
@@ -69,25 +113,27 @@ export default function Navbar() {
   }, [showAccountMenu]);
 
   return (
-    <nav className="backdrop-blur-md bg-white/80 shadow-lg shadow-blue-100/40 sticky top-0 z-50 rounded-b-2xl border-b border-blue-100 transition-all duration-300">
+    <nav className="backdrop-blur-md bg-white/90 shadow-lg shadow-blue-100/40 sticky top-0 z-50 rounded-b-2xl border-b border-blue-100 transition-all duration-300">
       {/* Main Navigation */}
       <div className="container-custom">
-        <div className="flex flex-nowrap items-center h-20 gap-8 px-2 xl:px-0 w-full">
+        <div className="flex flex-nowrap items-center h-20 gap-6 px-2 xl:px-0 w-full">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group min-w-fit mr-4">
+          <Link href="/" className="flex items-center space-x-2 group min-w-fit mr-4">
             <Image
               src="/images/logo.jpg"
               alt="FC ESCUELA"
-              width={48}
-              height={48}
-              className="rounded-full shadow-md border-2 border-blue-200 group-hover:scale-110 transition-transform duration-200"
+              width={40}
+              height={40}
+              className="rounded-full shadow-lg border-2 border-blue-300 group-hover:scale-110 transition-transform duration-200"
             />
             <span className="text-2xl font-extrabold text-blue-700 tracking-tight group-hover:text-blue-900 transition-colors duration-200 drop-shadow whitespace-nowrap">FC ESCUELA</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6 flex-1 justify-center min-w-0">
-            <NavLinks />
+          <div className="hidden lg:flex items-center flex-1 justify-center min-w-0">
+            <div className="flex flex-nowrap space-x-4 overflow-x-auto min-w-max scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
+              <NavLinksList pathname={pathname} />
+            </div>
           </div>
 
           {/* Search and Auth */}
@@ -129,7 +175,7 @@ export default function Navbar() {
         style={{ transitionProperty: 'max-height, opacity' }}
       >
         <div className="container-custom py-6 space-y-3">
-          <NavLinks />
+          <MobileNavLinksList />
           <div className="border-t border-gray-100 my-2" />
           <AccountMenu />
         </div>

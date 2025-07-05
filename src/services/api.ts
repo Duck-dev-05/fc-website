@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -47,23 +47,23 @@ export interface User {
 // Match API calls (no caching)
 export const matchApi = {
   getAll: async () => {
-    const response = await api.get<Match[]>('/match');
+    const response = await api.get<Match[]>('/matches');
     return response;
   },
   getById: async (id: number) => {
-    const response = await api.get<Match>(`/match/${id}`);
+    const response = await api.get<Match>(`/matches/${id}`);
     return response;
   },
   create: async (match: Omit<Match, 'id'>) => {
-    const response = await api.post<Match>('/match', match);
+    const response = await api.post<Match>('/matches', match);
     return response;
   },
   update: async (id: number, match: Match) => {
-    const response = await api.put(`/match/${id}`, match);
+    const response = await api.put(`/matches/${id}`, match);
     return response;
   },
   delete: async (id: number) => {
-    const response = await api.delete(`/match/${id}`);
+    const response = await api.delete(`/matches/${id}`);
     return response;
   },
 };
